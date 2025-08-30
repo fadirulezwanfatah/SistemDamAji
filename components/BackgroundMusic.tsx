@@ -20,20 +20,24 @@ const BackgroundMusic: React.FC<BackgroundMusicProps> = ({ tournamentStatus }) =
   // Track user interaction for autoplay policy
   useEffect(() => {
     const handleUserInteraction = () => {
+      console.log('🎵 User interaction detected, enabling music');
       setUserInteracted(true);
       document.removeEventListener('click', handleUserInteraction);
       document.removeEventListener('keydown', handleUserInteraction);
       document.removeEventListener('touchstart', handleUserInteraction);
+      document.removeEventListener('scroll', handleUserInteraction);
     };
 
     document.addEventListener('click', handleUserInteraction);
     document.addEventListener('keydown', handleUserInteraction);
     document.addEventListener('touchstart', handleUserInteraction);
+    document.addEventListener('scroll', handleUserInteraction);
 
     return () => {
       document.removeEventListener('click', handleUserInteraction);
       document.removeEventListener('keydown', handleUserInteraction);
       document.removeEventListener('touchstart', handleUserInteraction);
+      document.removeEventListener('scroll', handleUserInteraction);
     };
   }, []);
 
@@ -81,22 +85,32 @@ const BackgroundMusic: React.FC<BackgroundMusicProps> = ({ tournamentStatus }) =
   useEffect(() => {
     const audio = backgroundMusicRef.current;
 
-    console.log('🎵 Music state check:', {
+    console.log('🎵 Frontend Music state check:', {
       hasAudio: !!audio,
       isMusicEnabled,
       userInteracted,
       tournamentStatus,
       musicPlaying,
-      audioSrc: audio?.src
+      audioSrc: audio?.src,
+      backgroundMusicUrl
     });
 
-    if (!audio || !isMusicEnabled) {
-      console.log('🎵 Music disabled or no audio element');
+    if (!audio) {
+      console.log('🎵 No audio element found');
+      return;
+    }
+
+    if (!isMusicEnabled) {
+      console.log('🎵 Music disabled by admin');
+      if (musicPlaying) {
+        audio.pause();
+        setMusicPlaying(false);
+      }
       return;
     }
 
     if (!userInteracted) {
-      console.log('🎵 Waiting for user interaction...');
+      console.log('🎵 Waiting for user interaction... (click, scroll, or touch page)');
       return;
     }
 
@@ -105,25 +119,39 @@ const BackgroundMusic: React.FC<BackgroundMusicProps> = ({ tournamentStatus }) =
 
     if (shouldPlay && !musicPlaying) {
       // Try to play music (tournament not started/finished)
-      console.log('🎵 Attempting to play music...');
-      const playPromise = audio.play();
-      if (playPromise !== undefined) {
-        playPromise
-          .then(() => {
+      console.log('🎵 Attempting to play frontend music...');
+
+      // Ensure audio is loaded
+      if (audio.readyState >= 2) { // HAVE_CURRENT_DATA
+        const playPromise = audio.play();
+        if (playPromise !== undefined) {
+          playPromise
+            .then(() => {
+              setMusicPlaying(true);
+              console.log('✅ Frontend background music started successfully');
+            })
+            .catch((error) => {
+              console.error('❌ Frontend background music autoplay failed:', error);
+              console.error('Error details:', error.name, error.message);
+            });
+        }
+      } else {
+        console.log('🎵 Audio not ready, waiting for load...');
+        audio.addEventListener('canplay', () => {
+          console.log('🎵 Audio ready, attempting play...');
+          audio.play().then(() => {
             setMusicPlaying(true);
-            console.log('✅ Background music started successfully');
-          })
-          .catch((error) => {
-            console.error('❌ Background music autoplay failed:', error);
-          });
+            console.log('✅ Frontend music started after load');
+          }).catch(console.error);
+        }, { once: true });
       }
     } else if (!shouldPlay && musicPlaying) {
       // Pause music (tournament started)
       audio.pause();
       setMusicPlaying(false);
-      console.log('⏸️ Background music paused for tournament');
+      console.log('⏸️ Frontend background music paused for tournament');
     }
-  }, [tournamentStatus, isMusicEnabled, userInteracted, musicPlaying]);
+  }, [tournamentStatus, isMusicEnabled, userInteracted, musicPlaying, backgroundMusicUrl]);
 
   // Handle music enabled/disabled by admin
   useEffect(() => {
@@ -136,6 +164,30 @@ const BackgroundMusic: React.FC<BackgroundMusicProps> = ({ tournamentStatus }) =
       console.log('Background music disabled by admin');
     }
   }, [isMusicEnabled, musicPlaying]);
+
+  // Listen for frontend music test events from admin panel
+  useEffect(() => {
+    const handleTestFrontendMusic = (event: any) => {
+      console.log('🎵 Frontend music test triggered from admin panel');
+      const audio = backgroundMusicRef.current;
+      if (audio) {
+        audio.volume = event.detail.volume || musicVolume;
+        audio.play()
+          .then(() => {
+            console.log('✅ Frontend music test successful');
+            setMusicPlaying(true);
+          })
+          .catch((error) => {
+            console.error('❌ Frontend music test failed:', error);
+          });
+      }
+    };
+
+    window.addEventListener('testFrontendMusic', handleTestFrontendMusic);
+    return () => {
+      window.removeEventListener('testFrontendMusic', handleTestFrontendMusic);
+    };
+  }, [musicVolume]);
 
   // Only render if music is enabled by admin
   if (!isMusicEnabled) {
@@ -172,9 +224,12 @@ const BackgroundMusic: React.FC<BackgroundMusicProps> = ({ tournamentStatus }) =
       </audio>
 
       {/* User interaction prompt (only if needed) */}
-      {!userInteracted && (
+      {!userInteracted && isMusicEnabled && (
         <div
-          onClick={() => setUserInteracted(true)}
+          onClick={() => {
+            console.log('🎵 User clicked to enable music');
+            setUserInteracted(true);
+          }}
           style={{
             position: 'fixed',
             top: 0,
@@ -185,6 +240,24 @@ const BackgroundMusic: React.FC<BackgroundMusicProps> = ({ tournamentStatus }) =
             pointerEvents: 'auto'
           }}
         />
+      )}
+
+      {/* Debug info for frontend (only in development) */}
+      {process.env.NODE_ENV === 'development' && (
+        <div style={{
+          position: 'fixed',
+          bottom: '10px',
+          right: '10px',
+          background: 'rgba(0,0,0,0.8)',
+          color: 'white',
+          padding: '5px 10px',
+          borderRadius: '5px',
+          fontSize: '12px',
+          zIndex: 1000
+        }}>
+          🎵 Music: {isMusicEnabled ? (musicPlaying ? 'Playing' : 'Ready') : 'Disabled'} |
+          User: {userInteracted ? 'Interacted' : 'Waiting'}
+        </div>
       )}
     </>
   );

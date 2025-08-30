@@ -16,6 +16,8 @@ const MusicSettings: React.FC<MusicSettingsProps> = ({ className = '' }) => {
   } = useTournamentStore();
 
   const [localMusicUrl, setLocalMusicUrl] = useState(backgroundMusicUrl);
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [uploadedFileUrl, setUploadedFileUrl] = useState<string>('');
   const [isUploading, setIsUploading] = useState(false);
 
   const handleSaveMusicUrl = () => {
@@ -44,14 +46,23 @@ const MusicSettings: React.FC<MusicSettingsProps> = ({ className = '' }) => {
     try {
       // Create object URL for local file
       const objectUrl = URL.createObjectURL(file);
+      setUploadedFile(file);
+      setUploadedFileUrl(objectUrl);
       setLocalMusicUrl(objectUrl);
-      setBackgroundMusicUrl(objectUrl);
-      alert('Fail audio telah dimuat naik!');
+      alert('Fail audio telah dimuat naik! Klik "Simpan Fail Audio" untuk apply.');
     } catch (error) {
       console.error('Error uploading file:', error);
       alert('Ralat semasa memuat naik fail');
     } finally {
       setIsUploading(false);
+    }
+  };
+
+  const handleSaveUploadedFile = () => {
+    if (uploadedFileUrl) {
+      setBackgroundMusicUrl(uploadedFileUrl);
+      alert('Fail audio telah disimpan dan diaktifkan!');
+      setUploadedFile(null); // Clear the pending file
     }
   };
 
@@ -63,6 +74,7 @@ const MusicSettings: React.FC<MusicSettingsProps> = ({ className = '' }) => {
   ];
 
   const hasUnsavedChanges = localMusicUrl !== backgroundMusicUrl;
+  const hasUploadedFile = uploadedFile !== null;
 
   return (
     <div className={`music-settings ${className}`}>
@@ -143,6 +155,29 @@ const MusicSettings: React.FC<MusicSettingsProps> = ({ className = '' }) => {
               disabled={isUploading}
               className="w-full bg-lightest-navy p-3 rounded border border-light-slate text-lightest-slate file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:bg-gold file:text-navy file:font-semibold hover:file:bg-gold/90"
             />
+
+            {/* Show uploaded file info */}
+            {uploadedFile && (
+              <div className="p-3 bg-green-900/30 rounded border border-green-500/30">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-green-200">
+                      📁 <strong>{uploadedFile.name}</strong>
+                    </p>
+                    <p className="text-xs text-green-300">
+                      Size: {(uploadedFile.size / 1024 / 1024).toFixed(2)} MB
+                    </p>
+                  </div>
+                  <button
+                    onClick={handleSaveUploadedFile}
+                    className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition-colors"
+                  >
+                    💾 Simpan Fail Audio
+                  </button>
+                </div>
+              </div>
+            )}
+
             <p className="text-xs text-light-slate">
               Format disokong: MP3, WAV, OGG. Maksimum 5MB. Disyorkan: 3 minit, 128kbps.
             </p>
@@ -207,25 +242,40 @@ const MusicSettings: React.FC<MusicSettingsProps> = ({ className = '' }) => {
             <div>Volume: <span className="text-blue-300">{Math.round(musicVolume * 100)}%</span></div>
           </div>
 
-          {/* Force Test Button */}
-          <button
-            onClick={() => {
-              const audio = new Audio(backgroundMusicUrl);
-              audio.volume = musicVolume;
-              audio.play()
-                .then(() => {
-                  console.log('✅ Direct audio test successful');
-                  alert('✅ Audio test successful! Music should work.');
-                })
-                .catch((error) => {
-                  console.error('❌ Direct audio test failed:', error);
-                  alert('❌ Audio test failed: ' + error.message);
-                });
-            }}
-            className="w-full bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded transition-colors"
-          >
-            🔊 Force Test Audio
-          </button>
+          {/* Test Buttons */}
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              onClick={() => {
+                const audio = new Audio(backgroundMusicUrl);
+                audio.volume = musicVolume;
+                audio.play()
+                  .then(() => {
+                    console.log('✅ Admin panel audio test successful');
+                    alert('✅ Admin audio test successful!');
+                  })
+                  .catch((error) => {
+                    console.error('❌ Admin panel audio test failed:', error);
+                    alert('❌ Admin audio test failed: ' + error.message);
+                  });
+              }}
+              className="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded transition-colors"
+            >
+              🔊 Test Admin Audio
+            </button>
+
+            <button
+              onClick={() => {
+                // Test frontend music by triggering a custom event
+                window.dispatchEvent(new CustomEvent('testFrontendMusic', {
+                  detail: { url: backgroundMusicUrl, volume: musicVolume }
+                }));
+                alert('🎵 Frontend music test triggered! Check frontend tab and console.');
+              }}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors"
+            >
+              🌐 Test Frontend Music
+            </button>
+          </div>
 
           <p className="text-xs text-yellow-200 mt-2">
             💡 Check browser console (F12) untuk detailed music logs
