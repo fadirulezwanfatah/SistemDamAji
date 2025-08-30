@@ -303,14 +303,23 @@ const AdminView: React.FC = () => {
             <Header isAdmin={true} />
             <ToastContainer toasts={toasts} onRemoveToast={removeToast} />
             <main className="p-4 md:p-8">
-                {/* System Lock Status */}
+                {/* User Info & System Status */}
                 <div className="mb-6 p-4 rounded-lg border-2 border-gold/50 bg-light-navy/50">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                            <div className={`w-4 h-4 rounded-full ${isSystemLocked ? 'bg-red-500' : 'bg-green-500'}`}></div>
-                            <span className="text-lg font-semibold">
-                                Status Sistem: {isSystemLocked ? '🔒 DIKUNCI' : '🔓 TERBUKA'}
-                            </span>
+                            {/* Show system status only for Main Admin */}
+                            {hasPermission('canLockSystem') || hasPermission('canUnlockSystem') ? (
+                                <>
+                                    <div className={`w-4 h-4 rounded-full ${isSystemLocked ? 'bg-red-500' : 'bg-green-500'}`}></div>
+                                    <span className="text-lg font-semibold">
+                                        Status Sistem: {isSystemLocked ? '🔒 DIKUNCI' : '🔓 TERBUKA'}
+                                    </span>
+                                </>
+                            ) : (
+                                <span className="text-lg font-semibold text-gold">
+                                    {role === 'urusetia' ? '📋 Panel Urusetia' : '👤 Dashboard Personal'}
+                                </span>
+                            )}
                             <span className="text-sm text-light-slate">
                                 | Logged in as: <span className="text-gold font-semibold">{username}</span>
                                 <span className="text-xs text-slate ml-2">
@@ -319,8 +328,8 @@ const AdminView: React.FC = () => {
                             </span>
                         </div>
                         <div className="flex items-center gap-3">
-                            {/* System Lock/Unlock Button - Role-based access */}
-                            {(isSystemLocked && hasPermission('canUnlockSystem')) || (!isSystemLocked && hasPermission('canLockSystem')) ? (
+                            {/* System Lock/Unlock Button - Main Admin only */}
+                            {(hasPermission('canLockSystem') || hasPermission('canUnlockSystem')) && (
                                 <button
                                     onClick={toggleSystemLock}
                                     className={`px-4 py-2 rounded font-semibold transition-colors ${
@@ -331,11 +340,7 @@ const AdminView: React.FC = () => {
                                 >
                                     {isSystemLocked ? '🔓 Buka Kunci Sistem' : '🔒 Kunci Sistem'}
                                 </button>
-                            ) : isSystemLocked ? (
-                                <div className="px-4 py-2 rounded font-semibold bg-gray-500 text-gray-300 cursor-not-allowed">
-                                    🔒 Sistem Dikunci (Tiada akses buka kunci)
-                                </div>
-                            ) : null}
+                            )}
                             <button
                                 onClick={logout}
                                 className="px-4 py-2 rounded font-semibold bg-gray-600 hover:bg-gray-700 text-white transition-colors"
@@ -362,16 +367,20 @@ const AdminView: React.FC = () => {
                     <div className="flex flex-wrap gap-4 items-center">
                         <span className="font-semibold mr-4">Status Semasa: <span className="px-3 py-1 rounded-full text-sm font-bold" style={{ backgroundColor: status === TournamentStatus.ONLINE ? '#22c55e' : status === TournamentStatus.OFFLINE ? '#f97316' : '#64748b', color: 'white' }}>{status}</span></span>
                         <div className="flex-grow flex flex-wrap gap-4">
-                           {status === TournamentStatus.OFFLINE && <button onClick={handleStart} className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition-colors disabled:opacity-50" disabled={isSystemLocked || players.length < 2 || format === TournamentFormat.NOT_SELECTED}>Mula (Online)</button>}
-                           {status === TournamentStatus.ONLINE && <button onClick={() => setStatus(TournamentStatus.OFFLINE)} className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded transition-colors disabled:opacity-50" disabled={isSystemLocked}>Tangguh (Offline)</button>}
-                           {status === TournamentStatus.ONLINE && <button onClick={() => setStatus(TournamentStatus.FINISHED)} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors disabled:opacity-50" disabled={isSystemLocked}>Tamat (Finished)</button>}
-                           <button onClick={() => window.open('/#/print', '_blank')} className="bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded transition-colors">Cetak Laporan</button>
-                           {hasPermission('canExportData') && (
-                               <button onClick={() => setShowDataManager(true)} className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded transition-colors disabled:opacity-50" disabled={isSystemLocked}>Kelola Data</button>
+                           {status === TournamentStatus.OFFLINE && hasPermission('canManageMatches') && <button onClick={handleStart} className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition-colors disabled:opacity-50" disabled={isSystemLocked || players.length < 2 || format === TournamentFormat.NOT_SELECTED}>🟢 Mula (Online)</button>}
+                           {status === TournamentStatus.ONLINE && hasPermission('canManageMatches') && <button onClick={() => setStatus(TournamentStatus.OFFLINE)} className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded transition-colors disabled:opacity-50" disabled={isSystemLocked}>⏸️ Tangguh (Offline)</button>}
+                           {status === TournamentStatus.ONLINE && hasPermission('canManageMatches') && <button onClick={() => setStatus(TournamentStatus.FINISHED)} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors disabled:opacity-50" disabled={isSystemLocked}>🏁 Tamat (Finished)</button>}
+                           {hasPermission('canViewReports') && (
+                               <button onClick={() => window.open('/#/print', '_blank')} className="bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded transition-colors">📄 Cetak Laporan</button>
                            )}
-                           <button onClick={() => setShowManualPairing(true)} className="bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 px-4 rounded transition-colors disabled:opacity-50" disabled={isSystemLocked}>
-                               🎲 {mode === TournamentMode.AUTO ? 'Mode Auto' : 'Mode Manual'}
-                           </button>
+                           {hasPermission('canExportData') && (
+                               <button onClick={() => setShowDataManager(true)} className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded transition-colors disabled:opacity-50" disabled={isSystemLocked}>📊 Kelola Data</button>
+                           )}
+                           {hasPermission('canManageMatches') && (
+                               <button onClick={() => setShowManualPairing(true)} className="bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 px-4 rounded transition-colors disabled:opacity-50" disabled={isSystemLocked}>
+                                   🎲 {mode === TournamentMode.AUTO ? 'Mode Auto' : 'Mode Manual'}
+                               </button>
+                           )}
                            <button onClick={() => setShowStatistics(!showStatistics)} className={`${showStatistics ? 'bg-gold text-navy' : 'bg-slate hover:bg-light-slate text-navy'} font-bold py-2 px-4 rounded transition-colors`}>
                                {showStatistics ? 'Sembunyikan' : 'Tunjuk'} Statistik
                            </button>
@@ -388,27 +397,29 @@ const AdminView: React.FC = () => {
                 </section>
                 
                 <div className="grid md:grid-cols-2 gap-8 mb-8">
-                    <div className="p-6 bg-light-navy rounded-lg shadow-lg">
-                        <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-2xl font-bold text-gold">Pengurusan Peserta ({players.length})</h2>
-                            <div className="text-sm text-slate">
-                                {searchQuery && `Menunjukkan ${filteredPlayers.length} daripada ${players.length} peserta`}
+                    {/* Player Management - Urusetia & Main Admin only */}
+                    {hasPermission('canManagePlayers') && (
+                        <div className="p-6 bg-light-navy rounded-lg shadow-lg">
+                            <div className="flex justify-between items-center mb-4">
+                                <h2 className="text-2xl font-bold text-gold">👥 Pengurusan Peserta ({players.length})</h2>
+                                <div className="text-sm text-slate">
+                                    {searchQuery && `Menunjukkan ${filteredPlayers.length} daripada ${players.length} peserta`}
+                                </div>
                             </div>
-                        </div>
 
-                        {/* Search Input */}
-                        <div className="mb-4">
-                            <SearchInput
-                                placeholder="Cari peserta (nama, persatuan, atau ID)..."
-                                onSearch={setSearchQuery}
-                                className="w-full"
-                            />
-                        </div>
-                        <div className="mb-4">
-                            <input type="text" placeholder="Nama Penuh" value={newPlayerName} onChange={e => setNewPlayerName(e.target.value)} className="w-full bg-navy p-2 rounded border border-lightest-navy mb-2" />
-                            <input type="text" placeholder="Persatuan/Daerah" value={newPlayerAssoc} onChange={e => setNewPlayerAssoc(e.target.value)} className="w-full bg-navy p-2 rounded border border-lightest-navy mb-2" />
-                            <input type="text" placeholder="No Kad Pengenalan (Pilihan)" value={newPlayerIC} onChange={e => setNewPlayerIC(e.target.value)} className="w-full bg-navy p-2 rounded border border-lightest-navy mb-2" />
-                            <input type="text" placeholder="No Telefon (Pilihan)" value={newPlayerPhone} onChange={e => setNewPlayerPhone(e.target.value)} className="w-full bg-navy p-2 rounded border border-lightest-navy mb-2" />
+                            {/* Search Input */}
+                            <div className="mb-4">
+                                <SearchInput
+                                    placeholder="Cari peserta (nama, persatuan, atau ID)..."
+                                    onSearch={setSearchQuery}
+                                    className="w-full"
+                                />
+                            </div>
+                            <div className="mb-4">
+                                <input type="text" placeholder="Nama Penuh" value={newPlayerName} onChange={e => setNewPlayerName(e.target.value)} className="w-full bg-navy p-2 rounded border border-lightest-navy mb-2" />
+                                <input type="text" placeholder="Persatuan/Daerah" value={newPlayerAssoc} onChange={e => setNewPlayerAssoc(e.target.value)} className="w-full bg-navy p-2 rounded border border-lightest-navy mb-2" />
+                                <input type="text" placeholder="No Kad Pengenalan (Pilihan)" value={newPlayerIC} onChange={e => setNewPlayerIC(e.target.value)} className="w-full bg-navy p-2 rounded border border-lightest-navy mb-2" />
+                                <input type="text" placeholder="No Telefon (Pilihan)" value={newPlayerPhone} onChange={e => setNewPlayerPhone(e.target.value)} className="w-full bg-navy p-2 rounded border border-lightest-navy mb-2" />
                             <button
                                 onClick={handleAddPlayer}
                                 className="w-full bg-gold hover:opacity-90 text-navy font-bold py-2 px-4 rounded transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
@@ -453,21 +464,71 @@ const AdminView: React.FC = () => {
                                 ))
                             )}
                         </ul>
-                    </div>
-                    <div className="p-6 bg-light-navy rounded-lg shadow-lg">
-                        <h2 className="text-2xl font-bold text-gold mb-4">Tetapan Pertandingan</h2>
-                        <div className="mb-4">
-                            <label className="block mb-2 font-semibold">Format Pertandingan</label>
-                            <select value={format} onChange={e => setFormat(e.target.value as TournamentFormat)} className="w-full bg-navy p-2 rounded border border-lightest-navy" disabled={isSystemLocked || status !== TournamentStatus.OFFLINE || !hasPermission('canModifySettings')}><option value={TournamentFormat.NOT_SELECTED}>-- Pilih Format --</option><option value={TournamentFormat.LEAGUE}>Liga</option><option value={TournamentFormat.KNOCKOUT}>Kalah Mati</option></select>
                         </div>
-                        <div className="mb-4"><label className="block mb-2 font-semibold">URL Logo Kiri (LKIM)</label><input type="text" value={localLkimLogoUrl} onChange={e => setLocalLkimLogoUrl(e.target.value)} className="w-full bg-navy p-2 rounded border border-lightest-navy" disabled={isSystemLocked || status !== TournamentStatus.OFFLINE || !hasPermission('canModifySettings')} /></div>
-                        <div className="mb-4"><label className="block mb-2 font-semibold">URL Logo Kanan (MADANI)</label><input type="text" value={localMadaniLogoUrl} onChange={e => setLocalMadaniLogoUrl(e.target.value)} className="w-full bg-navy p-2 rounded border border-lightest-navy" disabled={isSystemLocked || status !== TournamentStatus.OFFLINE || !hasPermission('canModifySettings')} /></div>
-                        <div className="mb-4"><label className="block mb-2 font-semibold">URL Gambar Background</label><input type="text" value={localBackgroundImageUrl} onChange={e => setLocalBackgroundImageUrl(e.target.value)} className="w-full bg-navy p-2 rounded border border-lightest-navy" disabled={isSystemLocked || status !== TournamentStatus.OFFLINE || !hasPermission('canModifySettings')} placeholder="https://example.com/background.jpg" /></div>
-                        <div className="mb-4"><label className="block mb-2 font-semibold">Butiran Acara</label><input type="text" value={localEventDetails} onChange={e => setLocalEventDetails(e.target.value)} className="w-full bg-navy p-2 rounded border border-lightest-navy" disabled={isSystemLocked || status !== TournamentStatus.OFFLINE || !hasPermission('canModifySettings')} placeholder="Contoh: GELOMBANG SAMUDERA MADANI" /></div>
-                        <div className="mb-4"><label className="block mb-2 font-semibold">Mesej Selamat Datang</label><textarea value={localWelcomeMessage} onChange={e => setLocalWelcomeMessage(e.target.value)} rows={3} className="w-full bg-navy p-2 rounded border border-lightest-navy" disabled={isSystemLocked || status !== TournamentStatus.OFFLINE || !hasPermission('canModifySettings')}></textarea></div>
-                        <div><label className="block mb-2 font-semibold">Teks Footer</label><textarea value={localFooterText} onChange={e => setLocalFooterText(e.target.value)} rows={3} className="w-full bg-navy p-2 rounded border border-lightest-navy" disabled={isSystemLocked || status !== TournamentStatus.OFFLINE || !hasPermission('canModifySettings')}></textarea></div>
-                        {hasUnsavedChanges && hasPermission('canModifySettings') && (<button onClick={handleSaveChanges} className="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors disabled:opacity-50" disabled={isSystemLocked || status !== TournamentStatus.OFFLINE}>Simpan Perubahan</button>)}
-                    </div>
+                    )}
+
+                    {/* Personal Dashboard - Personal role only */}
+                    {role === 'personal' && (
+                        <div className="p-6 bg-light-navy rounded-lg shadow-lg">
+                            <h2 className="text-2xl font-bold text-gold mb-4">👤 Dashboard Personal</h2>
+                            <div className="space-y-4">
+                                <div className="p-4 bg-navy rounded border border-lightest-navy">
+                                    <h3 className="text-lg font-semibold text-gold mb-2">📊 Statistik Pertandingan</h3>
+                                    <div className="grid grid-cols-2 gap-4 text-sm">
+                                        <div>
+                                            <span className="text-light-slate">Total Peserta:</span>
+                                            <span className="text-lightest-slate font-bold ml-2">{players.length}</span>
+                                        </div>
+                                        <div>
+                                            <span className="text-light-slate">Status:</span>
+                                            <span className="text-lightest-slate font-bold ml-2">{status}</span>
+                                        </div>
+                                        <div>
+                                            <span className="text-light-slate">Format:</span>
+                                            <span className="text-lightest-slate font-bold ml-2">
+                                                {format === TournamentFormat.NOT_SELECTED ? 'Belum Dipilih' :
+                                                 format === TournamentFormat.LEAGUE ? 'Liga' : 'Kalah Mati'}
+                                            </span>
+                                        </div>
+                                        <div>
+                                            <span className="text-light-slate">Pusingan:</span>
+                                            <span className="text-lightest-slate font-bold ml-2">{currentRound}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="p-4 bg-navy rounded border border-lightest-navy">
+                                    <h3 className="text-lg font-semibold text-gold mb-2">🎯 Akses Tersedia</h3>
+                                    <ul className="space-y-2 text-sm text-light-slate">
+                                        <li>✅ Lihat statistik pertandingan</li>
+                                        <li>✅ Cetak laporan</li>
+                                        <li>✅ Lihat papan kedudukan</li>
+                                        <li>❌ Urus peserta (Hubungi Urusetia)</li>
+                                        <li>❌ Urus perlawanan (Hubungi Urusetia)</li>
+                                        <li>❌ Ubah tetapan sistem (Hubungi Main Admin)</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Settings Panel - Main Admin only */}
+                    {hasPermission('canModifySettings') && (
+                        <div className="p-6 bg-light-navy rounded-lg shadow-lg">
+                            <h2 className="text-2xl font-bold text-gold mb-4">⚙️ Tetapan Sistem</h2>
+                            <div className="mb-4">
+                                <label className="block mb-2 font-semibold">Format Pertandingan</label>
+                                <select value={format} onChange={e => setFormat(e.target.value as TournamentFormat)} className="w-full bg-navy p-2 rounded border border-lightest-navy" disabled={isSystemLocked || status !== TournamentStatus.OFFLINE}><option value={TournamentFormat.NOT_SELECTED}>-- Pilih Format --</option><option value={TournamentFormat.LEAGUE}>Liga</option><option value={TournamentFormat.KNOCKOUT}>Kalah Mati</option></select>
+                            </div>
+                            <div className="mb-4"><label className="block mb-2 font-semibold">URL Logo Kiri (LKIM)</label><input type="text" value={localLkimLogoUrl} onChange={e => setLocalLkimLogoUrl(e.target.value)} className="w-full bg-navy p-2 rounded border border-lightest-navy" disabled={isSystemLocked || status !== TournamentStatus.OFFLINE} /></div>
+                            <div className="mb-4"><label className="block mb-2 font-semibold">URL Logo Kanan (MADANI)</label><input type="text" value={localMadaniLogoUrl} onChange={e => setLocalMadaniLogoUrl(e.target.value)} className="w-full bg-navy p-2 rounded border border-lightest-navy" disabled={isSystemLocked || status !== TournamentStatus.OFFLINE} /></div>
+                            <div className="mb-4"><label className="block mb-2 font-semibold">URL Gambar Background</label><input type="text" value={localBackgroundImageUrl} onChange={e => setLocalBackgroundImageUrl(e.target.value)} className="w-full bg-navy p-2 rounded border border-lightest-navy" disabled={isSystemLocked || status !== TournamentStatus.OFFLINE} placeholder="https://example.com/background.jpg" /></div>
+                            <div className="mb-4"><label className="block mb-2 font-semibold">Butiran Acara</label><input type="text" value={localEventDetails} onChange={e => setLocalEventDetails(e.target.value)} className="w-full bg-navy p-2 rounded border border-lightest-navy" disabled={isSystemLocked || status !== TournamentStatus.OFFLINE} placeholder="Contoh: GELOMBANG SAMUDERA MADANI" /></div>
+                            <div className="mb-4"><label className="block mb-2 font-semibold">Mesej Selamat Datang</label><textarea value={localWelcomeMessage} onChange={e => setLocalWelcomeMessage(e.target.value)} rows={3} className="w-full bg-navy p-2 rounded border border-lightest-navy" disabled={isSystemLocked || status !== TournamentStatus.OFFLINE}></textarea></div>
+                            <div><label className="block mb-2 font-semibold">Teks Footer</label><textarea value={localFooterText} onChange={e => setLocalFooterText(e.target.value)} rows={3} className="w-full bg-navy p-2 rounded border border-lightest-navy" disabled={isSystemLocked || status !== TournamentStatus.OFFLINE}></textarea></div>
+                            {hasUnsavedChanges && (<button onClick={handleSaveChanges} className="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors disabled:opacity-50" disabled={isSystemLocked || status !== TournamentStatus.OFFLINE}>Simpan Perubahan</button>)}
+                        </div>
+                    )}
                 </div>
                 {status === TournamentStatus.ONLINE && (
                 <section className="p-6 bg-light-navy rounded-lg shadow-lg">

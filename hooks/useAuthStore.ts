@@ -31,6 +31,7 @@ interface AuthState {
 const getPermissionsByRole = (role: UserRole): UserPermissions => {
     switch (role) {
         case UserRole.MAIN_ADMIN:
+            // 👑 MAIN ADMIN - FULL ACCESS
             return {
                 canLockSystem: true,
                 canUnlockSystem: true,
@@ -42,26 +43,28 @@ const getPermissionsByRole = (role: UserRole): UserPermissions => {
                 canExportData: true,
             };
         case UserRole.URUSETIA:
+            // 📋 URUSETIA - Sistem urusan perlawanan sahaja
             return {
-                canLockSystem: true,
+                canLockSystem: false, // TIDAK boleh kunci sistem
                 canUnlockSystem: false, // TIDAK boleh buka kunci sistem
                 canResetTournament: false, // TIDAK boleh reset tournament
-                canModifySettings: false, // TIDAK boleh modify settings
-                canManagePlayers: true,
-                canManageMatches: true,
-                canViewReports: true,
-                canExportData: true,
+                canModifySettings: false, // TIDAK boleh ubah tetapan sistem
+                canManagePlayers: true, // Boleh urus peserta
+                canManageMatches: true, // Boleh urus perlawanan
+                canViewReports: true, // Boleh cetak laporan
+                canExportData: true, // Boleh kelola data
             };
         case UserRole.PERSONAL:
+            // 👤 PERSONAL - Dashboard personal sahaja
             return {
-                canLockSystem: false,
-                canUnlockSystem: false,
-                canResetTournament: false,
-                canModifySettings: true,
-                canManagePlayers: true,
-                canManageMatches: true,
-                canViewReports: true,
-                canExportData: true,
+                canLockSystem: false, // TIDAK boleh kunci sistem
+                canUnlockSystem: false, // TIDAK boleh buka kunci sistem
+                canResetTournament: false, // TIDAK boleh reset tournament
+                canModifySettings: false, // TIDAK boleh ubah tetapan sistem
+                canManagePlayers: false, // TIDAK boleh urus peserta
+                canManageMatches: false, // TIDAK boleh urus perlawanan
+                canViewReports: true, // Boleh lihat laporan
+                canExportData: false, // TIDAK boleh kelola data
             };
         default:
             return {

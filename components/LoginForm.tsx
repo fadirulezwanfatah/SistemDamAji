@@ -15,7 +15,7 @@ const LoginForm: React.FC = () => {
 
         // Role-based authentication
         const validCredentials = [
-            { username: 'admin', password: 'lkim2025', role: UserRole.MAIN_ADMIN },
+            { username: 'admin', password: 'adminbt2025', role: UserRole.MAIN_ADMIN },
             { username: 'urusetia', password: 'damaji2025', role: UserRole.URUSETIA },
             { username: 'fadirule', password: 'admin123', role: UserRole.PERSONAL }
         ];
