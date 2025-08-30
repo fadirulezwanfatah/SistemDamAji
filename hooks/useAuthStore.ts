@@ -48,7 +48,7 @@ const getPermissionsByRole = (role: UserRole): UserPermissions => {
                 canLockSystem: false, // TIDAK boleh kunci sistem
                 canUnlockSystem: false, // TIDAK boleh buka kunci sistem
                 canResetTournament: false, // TIDAK boleh reset tournament
-                canModifySettings: false, // TIDAK boleh ubah tetapan sistem
+                canModifySettings: true, // BOLEH ubah format pertandingan
                 canManagePlayers: true, // Boleh urus peserta
                 canManageMatches: true, // Boleh urus perlawanan
                 canViewReports: true, // Boleh cetak laporan

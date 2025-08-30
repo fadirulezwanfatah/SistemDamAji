@@ -512,21 +512,49 @@ const AdminView: React.FC = () => {
                         </div>
                     )}
 
-                    {/* Settings Panel - Main Admin only */}
+                    {/* Settings Panel - Role-based access */}
                     {hasPermission('canModifySettings') && (
                         <div className="p-6 bg-light-navy rounded-lg shadow-lg">
-                            <h2 className="text-2xl font-bold text-gold mb-4">⚙️ Tetapan Sistem</h2>
+                            <h2 className="text-2xl font-bold text-gold mb-4">
+                                {role === 'main_admin' ? '⚙️ Tetapan Sistem' : '🎯 Tetapan Pertandingan'}
+                            </h2>
+
+                            {/* Format Selection - Available for both Main Admin and Urusetia */}
                             <div className="mb-4">
                                 <label className="block mb-2 font-semibold">Format Pertandingan</label>
-                                <select value={format} onChange={e => setFormat(e.target.value as TournamentFormat)} className="w-full bg-navy p-2 rounded border border-lightest-navy" disabled={isSystemLocked || status !== TournamentStatus.OFFLINE}><option value={TournamentFormat.NOT_SELECTED}>-- Pilih Format --</option><option value={TournamentFormat.LEAGUE}>Liga</option><option value={TournamentFormat.KNOCKOUT}>Kalah Mati</option></select>
+                                <select
+                                    value={format}
+                                    onChange={e => setFormat(e.target.value as TournamentFormat)}
+                                    className="w-full bg-navy p-2 rounded border border-lightest-navy"
+                                    disabled={isSystemLocked || status !== TournamentStatus.OFFLINE}
+                                >
+                                    <option value={TournamentFormat.NOT_SELECTED}>-- Pilih Format --</option>
+                                    <option value={TournamentFormat.LEAGUE}>Liga</option>
+                                    <option value={TournamentFormat.KNOCKOUT}>Kalah Mati</option>
+                                </select>
                             </div>
-                            <div className="mb-4"><label className="block mb-2 font-semibold">URL Logo Kiri (LKIM)</label><input type="text" value={localLkimLogoUrl} onChange={e => setLocalLkimLogoUrl(e.target.value)} className="w-full bg-navy p-2 rounded border border-lightest-navy" disabled={isSystemLocked || status !== TournamentStatus.OFFLINE} /></div>
-                            <div className="mb-4"><label className="block mb-2 font-semibold">URL Logo Kanan (MADANI)</label><input type="text" value={localMadaniLogoUrl} onChange={e => setLocalMadaniLogoUrl(e.target.value)} className="w-full bg-navy p-2 rounded border border-lightest-navy" disabled={isSystemLocked || status !== TournamentStatus.OFFLINE} /></div>
-                            <div className="mb-4"><label className="block mb-2 font-semibold">URL Gambar Background</label><input type="text" value={localBackgroundImageUrl} onChange={e => setLocalBackgroundImageUrl(e.target.value)} className="w-full bg-navy p-2 rounded border border-lightest-navy" disabled={isSystemLocked || status !== TournamentStatus.OFFLINE} placeholder="https://example.com/background.jpg" /></div>
-                            <div className="mb-4"><label className="block mb-2 font-semibold">Butiran Acara</label><input type="text" value={localEventDetails} onChange={e => setLocalEventDetails(e.target.value)} className="w-full bg-navy p-2 rounded border border-lightest-navy" disabled={isSystemLocked || status !== TournamentStatus.OFFLINE} placeholder="Contoh: GELOMBANG SAMUDERA MADANI" /></div>
-                            <div className="mb-4"><label className="block mb-2 font-semibold">Mesej Selamat Datang</label><textarea value={localWelcomeMessage} onChange={e => setLocalWelcomeMessage(e.target.value)} rows={3} className="w-full bg-navy p-2 rounded border border-lightest-navy" disabled={isSystemLocked || status !== TournamentStatus.OFFLINE}></textarea></div>
-                            <div><label className="block mb-2 font-semibold">Teks Footer</label><textarea value={localFooterText} onChange={e => setLocalFooterText(e.target.value)} rows={3} className="w-full bg-navy p-2 rounded border border-lightest-navy" disabled={isSystemLocked || status !== TournamentStatus.OFFLINE}></textarea></div>
-                            {hasUnsavedChanges && (<button onClick={handleSaveChanges} className="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors disabled:opacity-50" disabled={isSystemLocked || status !== TournamentStatus.OFFLINE}>Simpan Perubahan</button>)}
+
+                            {/* Advanced Settings - Main Admin only */}
+                            {role === 'main_admin' && (
+                                <>
+                                    <div className="mb-4"><label className="block mb-2 font-semibold">URL Logo Kiri (LKIM)</label><input type="text" value={localLkimLogoUrl} onChange={e => setLocalLkimLogoUrl(e.target.value)} className="w-full bg-navy p-2 rounded border border-lightest-navy" disabled={isSystemLocked || status !== TournamentStatus.OFFLINE} /></div>
+                                    <div className="mb-4"><label className="block mb-2 font-semibold">URL Logo Kanan (MADANI)</label><input type="text" value={localMadaniLogoUrl} onChange={e => setLocalMadaniLogoUrl(e.target.value)} className="w-full bg-navy p-2 rounded border border-lightest-navy" disabled={isSystemLocked || status !== TournamentStatus.OFFLINE} /></div>
+                                    <div className="mb-4"><label className="block mb-2 font-semibold">URL Gambar Background</label><input type="text" value={localBackgroundImageUrl} onChange={e => setLocalBackgroundImageUrl(e.target.value)} className="w-full bg-navy p-2 rounded border border-lightest-navy" disabled={isSystemLocked || status !== TournamentStatus.OFFLINE} placeholder="https://example.com/background.jpg" /></div>
+                                    <div className="mb-4"><label className="block mb-2 font-semibold">Butiran Acara</label><input type="text" value={localEventDetails} onChange={e => setLocalEventDetails(e.target.value)} className="w-full bg-navy p-2 rounded border border-lightest-navy" disabled={isSystemLocked || status !== TournamentStatus.OFFLINE} placeholder="Contoh: GELOMBANG SAMUDERA MADANI" /></div>
+                                    <div className="mb-4"><label className="block mb-2 font-semibold">Mesej Selamat Datang</label><textarea value={localWelcomeMessage} onChange={e => setLocalWelcomeMessage(e.target.value)} rows={3} className="w-full bg-navy p-2 rounded border border-lightest-navy" disabled={isSystemLocked || status !== TournamentStatus.OFFLINE}></textarea></div>
+                                    <div><label className="block mb-2 font-semibold">Teks Footer</label><textarea value={localFooterText} onChange={e => setLocalFooterText(e.target.value)} rows={3} className="w-full bg-navy p-2 rounded border border-lightest-navy" disabled={isSystemLocked || status !== TournamentStatus.OFFLINE}></textarea></div>
+                                    {hasUnsavedChanges && (<button onClick={handleSaveChanges} className="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors disabled:opacity-50" disabled={isSystemLocked || status !== TournamentStatus.OFFLINE}>Simpan Perubahan</button>)}
+                                </>
+                            )}
+
+                            {/* Urusetia Info */}
+                            {role === 'urusetia' && (
+                                <div className="mt-4 p-3 bg-navy rounded border border-lightest-navy">
+                                    <p className="text-sm text-light-slate">
+                                        ℹ️ Anda boleh pilih format pertandingan. Untuk tetapan lain, hubungi Main Admin.
+                                    </p>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>
