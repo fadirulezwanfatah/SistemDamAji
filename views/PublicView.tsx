@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useTournamentStore } from '../hooks/useTournamentStore';
 import { TournamentStatus, Match, Player, TournamentFormat } from '../types';
 import Header from '../components/Header';
+import AudioManager from '../components/AudioManager';
 import { TrophyIcon, UsersIcon, ListIcon } from '../components/icons';
 import { ORGANIZER, DAM_AJI_BOARD_BG } from '../constants';
 
@@ -478,6 +479,12 @@ const PublicView: React.FC = () => {
     <div className="h-screen bg-navy text-lightest-slate flex flex-col bg-cover bg-center" style={{ backgroundImage: `url(${backgroundImageUrl || DAM_AJI_BOARD_BG})` }}>
         <div className="h-full flex flex-col bg-navy/80">
             <Header />
+
+            {/* Audio Manager - Smart background music */}
+            <div className="px-4 py-2">
+                <AudioManager tournamentStatus={status} className="max-w-7xl mx-auto" />
+            </div>
+
             <main className="flex-grow flex flex-col min-h-0 overflow-hidden">{renderContent()}</main>
             <footer className="w-full text-base text-slate bg-navy p-3 shrink-0 border-t-2 border-gold">
                 <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center text-center md:text-left gap-2">
