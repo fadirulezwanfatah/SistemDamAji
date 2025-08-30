@@ -32,7 +32,7 @@ const AdminView: React.FC = () => {
         resetTournament, exportTournamentData,
     } = useTournamentStore();
 
-    const { username, logout } = useAuthStore();
+    const { username, role, logout, hasPermission } = useAuthStore();
     const { toasts, removeToast, showSuccess, showError } = useToast();
 
     const [newPlayerName, setNewPlayerName] = useState('');
@@ -313,19 +313,29 @@ const AdminView: React.FC = () => {
                             </span>
                             <span className="text-sm text-light-slate">
                                 | Logged in as: <span className="text-gold font-semibold">{username}</span>
+                                <span className="text-xs text-slate ml-2">
+                                    ({role === 'main_admin' ? 'Main Admin' : role === 'urusetia' ? 'Urusetia' : 'Personal'})
+                                </span>
                             </span>
                         </div>
                         <div className="flex items-center gap-3">
-                            <button
-                                onClick={toggleSystemLock}
-                                className={`px-4 py-2 rounded font-semibold transition-colors ${
-                                    isSystemLocked
-                                        ? 'bg-green-600 hover:bg-green-700 text-white'
-                                        : 'bg-red-600 hover:bg-red-700 text-white'
-                                }`}
-                            >
-                                {isSystemLocked ? '🔓 Buka Kunci Sistem' : '🔒 Kunci Sistem'}
-                            </button>
+                            {/* System Lock/Unlock Button - Role-based access */}
+                            {(isSystemLocked && hasPermission('canUnlockSystem')) || (!isSystemLocked && hasPermission('canLockSystem')) ? (
+                                <button
+                                    onClick={toggleSystemLock}
+                                    className={`px-4 py-2 rounded font-semibold transition-colors ${
+                                        isSystemLocked
+                                            ? 'bg-green-600 hover:bg-green-700 text-white'
+                                            : 'bg-red-600 hover:bg-red-700 text-white'
+                                    }`}
+                                >
+                                    {isSystemLocked ? '🔓 Buka Kunci Sistem' : '🔒 Kunci Sistem'}
+                                </button>
+                            ) : isSystemLocked ? (
+                                <div className="px-4 py-2 rounded font-semibold bg-gray-500 text-gray-300 cursor-not-allowed">
+                                    🔒 Sistem Dikunci (Tiada akses buka kunci)
+                                </div>
+                            ) : null}
                             <button
                                 onClick={logout}
                                 className="px-4 py-2 rounded font-semibold bg-gray-600 hover:bg-gray-700 text-white transition-colors"
@@ -339,6 +349,11 @@ const AdminView: React.FC = () => {
                             ? 'Sistem dikunci. Semua fungsi admin dimatikan kecuali buka kunci.'
                             : 'Sistem terbuka. Semua fungsi admin boleh digunakan.'
                         }
+                        {isSystemLocked && !hasPermission('canUnlockSystem') && (
+                            <span className="block text-yellow-400 mt-1">
+                                ⚠️ Anda tidak mempunyai kebenaran untuk membuka kunci sistem. Hubungi Main Admin.
+                            </span>
+                        )}
                     </p>
                 </div>
 
@@ -351,7 +366,9 @@ const AdminView: React.FC = () => {
                            {status === TournamentStatus.ONLINE && <button onClick={() => setStatus(TournamentStatus.OFFLINE)} className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded transition-colors disabled:opacity-50" disabled={isSystemLocked}>Tangguh (Offline)</button>}
                            {status === TournamentStatus.ONLINE && <button onClick={() => setStatus(TournamentStatus.FINISHED)} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors disabled:opacity-50" disabled={isSystemLocked}>Tamat (Finished)</button>}
                            <button onClick={() => window.open('/#/print', '_blank')} className="bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded transition-colors">Cetak Laporan</button>
-                           <button onClick={() => setShowDataManager(true)} className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded transition-colors disabled:opacity-50" disabled={isSystemLocked}>Kelola Data</button>
+                           {hasPermission('canExportData') && (
+                               <button onClick={() => setShowDataManager(true)} className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded transition-colors disabled:opacity-50" disabled={isSystemLocked}>Kelola Data</button>
+                           )}
                            <button onClick={() => setShowManualPairing(true)} className="bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 px-4 rounded transition-colors disabled:opacity-50" disabled={isSystemLocked}>
                                🎲 {mode === TournamentMode.AUTO ? 'Mode Auto' : 'Mode Manual'}
                            </button>
@@ -363,7 +380,9 @@ const AdminView: React.FC = () => {
                                    {showBracket ? 'Sembunyikan' : 'Tunjuk'} Bracket
                                </button>
                            )}
-                           <button onClick={handleResetTournament} className="bg-red-700 hover:bg-red-800 text-white font-bold py-2 px-4 rounded transition-colors">Reset Pertandingan</button>
+                           {hasPermission('canResetTournament') && (
+                               <button onClick={handleResetTournament} className="bg-red-700 hover:bg-red-800 text-white font-bold py-2 px-4 rounded transition-colors">Reset Pertandingan</button>
+                           )}
                         </div>
                     </div>
                 </section>
@@ -393,7 +412,7 @@ const AdminView: React.FC = () => {
                             <button
                                 onClick={handleAddPlayer}
                                 className="w-full bg-gold hover:opacity-90 text-navy font-bold py-2 px-4 rounded transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-                                disabled={isSystemLocked || status !== TournamentStatus.OFFLINE || isLoading}
+                                disabled={isSystemLocked || status !== TournamentStatus.OFFLINE || isLoading || !hasPermission('canManagePlayers')}
                             >
                                 {isLoading && <div className="w-4 h-4 border-2 border-navy border-t-transparent rounded-full animate-spin"></div>}
                                 {isLoading ? 'Menambah...' : 'Tambah Peserta'}
@@ -425,8 +444,8 @@ const AdminView: React.FC = () => {
                                                 {(p.icNumber || p.phoneNumber) && (<div className="text-xs text-slate mt-1.5">{p.icNumber && <span>KP: {p.icNumber}</span>}{p.icNumber && p.phoneNumber && <span className="mx-2">|</span>}{p.phoneNumber && <span>Tel: {p.phoneNumber}</span>}</div>)}
                                             </div>
                                             <div className="flex gap-2 items-center flex-shrink-0 ml-4">
-                                                <button onClick={() => handleEdit(p)} className="text-xs bg-blue-600 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded disabled:opacity-50 disabled:cursor-not-allowed" disabled={isSystemLocked || status !== TournamentStatus.OFFLINE} title={isSystemLocked ? "Sistem dikunci" : status !== TournamentStatus.OFFLINE ? "Hanya boleh edit semasa status OFFLINE" : "Edit Peserta"}>Edit</button>
-                                                <button onClick={() => handleRemovePlayer(p.id)} className="text-red-400 hover:text-red-200 text-2xl font-bold disabled:opacity-50 disabled:cursor-not-allowed" disabled={isSystemLocked || status !== TournamentStatus.OFFLINE} title={isSystemLocked ? "Sistem dikunci" : status !== TournamentStatus.OFFLINE ? "Hanya boleh padam semasa status OFFLINE" : "Padam Peserta"}>&times;</button>
+                                                <button onClick={() => handleEdit(p)} className="text-xs bg-blue-600 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded disabled:opacity-50 disabled:cursor-not-allowed" disabled={isSystemLocked || status !== TournamentStatus.OFFLINE || !hasPermission('canManagePlayers')} title={isSystemLocked ? "Sistem dikunci" : status !== TournamentStatus.OFFLINE ? "Hanya boleh edit semasa status OFFLINE" : !hasPermission('canManagePlayers') ? "Tiada kebenaran edit peserta" : "Edit Peserta"}>Edit</button>
+                                                <button onClick={() => handleRemovePlayer(p.id)} className="text-red-400 hover:text-red-200 text-2xl font-bold disabled:opacity-50 disabled:cursor-not-allowed" disabled={isSystemLocked || status !== TournamentStatus.OFFLINE || !hasPermission('canManagePlayers')} title={isSystemLocked ? "Sistem dikunci" : status !== TournamentStatus.OFFLINE ? "Hanya boleh padam semasa status OFFLINE" : !hasPermission('canManagePlayers') ? "Tiada kebenaran padam peserta" : "Padam Peserta"}>&times;</button>
                                             </div>
                                         </div>
                                     )}
@@ -439,15 +458,15 @@ const AdminView: React.FC = () => {
                         <h2 className="text-2xl font-bold text-gold mb-4">Tetapan Pertandingan</h2>
                         <div className="mb-4">
                             <label className="block mb-2 font-semibold">Format Pertandingan</label>
-                            <select value={format} onChange={e => setFormat(e.target.value as TournamentFormat)} className="w-full bg-navy p-2 rounded border border-lightest-navy" disabled={isSystemLocked || status !== TournamentStatus.OFFLINE}><option value={TournamentFormat.NOT_SELECTED}>-- Pilih Format --</option><option value={TournamentFormat.LEAGUE}>Liga</option><option value={TournamentFormat.KNOCKOUT}>Kalah Mati</option></select>
+                            <select value={format} onChange={e => setFormat(e.target.value as TournamentFormat)} className="w-full bg-navy p-2 rounded border border-lightest-navy" disabled={isSystemLocked || status !== TournamentStatus.OFFLINE || !hasPermission('canModifySettings')}><option value={TournamentFormat.NOT_SELECTED}>-- Pilih Format --</option><option value={TournamentFormat.LEAGUE}>Liga</option><option value={TournamentFormat.KNOCKOUT}>Kalah Mati</option></select>
                         </div>
-                        <div className="mb-4"><label className="block mb-2 font-semibold">URL Logo Kiri (LKIM)</label><input type="text" value={localLkimLogoUrl} onChange={e => setLocalLkimLogoUrl(e.target.value)} className="w-full bg-navy p-2 rounded border border-lightest-navy" disabled={isSystemLocked || status !== TournamentStatus.OFFLINE} /></div>
-                        <div className="mb-4"><label className="block mb-2 font-semibold">URL Logo Kanan (MADANI)</label><input type="text" value={localMadaniLogoUrl} onChange={e => setLocalMadaniLogoUrl(e.target.value)} className="w-full bg-navy p-2 rounded border border-lightest-navy" disabled={isSystemLocked || status !== TournamentStatus.OFFLINE} /></div>
-                        <div className="mb-4"><label className="block mb-2 font-semibold">URL Gambar Background</label><input type="text" value={localBackgroundImageUrl} onChange={e => setLocalBackgroundImageUrl(e.target.value)} className="w-full bg-navy p-2 rounded border border-lightest-navy" disabled={isSystemLocked || status !== TournamentStatus.OFFLINE} placeholder="https://example.com/background.jpg" /></div>
-                        <div className="mb-4"><label className="block mb-2 font-semibold">Butiran Acara</label><input type="text" value={localEventDetails} onChange={e => setLocalEventDetails(e.target.value)} className="w-full bg-navy p-2 rounded border border-lightest-navy" disabled={isSystemLocked || status !== TournamentStatus.OFFLINE} placeholder="Contoh: GELOMBANG SAMUDERA MADANI" /></div>
-                        <div className="mb-4"><label className="block mb-2 font-semibold">Mesej Selamat Datang</label><textarea value={localWelcomeMessage} onChange={e => setLocalWelcomeMessage(e.target.value)} rows={3} className="w-full bg-navy p-2 rounded border border-lightest-navy" disabled={isSystemLocked || status !== TournamentStatus.OFFLINE}></textarea></div>
-                        <div><label className="block mb-2 font-semibold">Teks Footer</label><textarea value={localFooterText} onChange={e => setLocalFooterText(e.target.value)} rows={3} className="w-full bg-navy p-2 rounded border border-lightest-navy" disabled={isSystemLocked || status !== TournamentStatus.OFFLINE}></textarea></div>
-                        {hasUnsavedChanges && (<button onClick={handleSaveChanges} className="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors disabled:opacity-50" disabled={isSystemLocked || status !== TournamentStatus.OFFLINE}>Simpan Perubahan</button>)}
+                        <div className="mb-4"><label className="block mb-2 font-semibold">URL Logo Kiri (LKIM)</label><input type="text" value={localLkimLogoUrl} onChange={e => setLocalLkimLogoUrl(e.target.value)} className="w-full bg-navy p-2 rounded border border-lightest-navy" disabled={isSystemLocked || status !== TournamentStatus.OFFLINE || !hasPermission('canModifySettings')} /></div>
+                        <div className="mb-4"><label className="block mb-2 font-semibold">URL Logo Kanan (MADANI)</label><input type="text" value={localMadaniLogoUrl} onChange={e => setLocalMadaniLogoUrl(e.target.value)} className="w-full bg-navy p-2 rounded border border-lightest-navy" disabled={isSystemLocked || status !== TournamentStatus.OFFLINE || !hasPermission('canModifySettings')} /></div>
+                        <div className="mb-4"><label className="block mb-2 font-semibold">URL Gambar Background</label><input type="text" value={localBackgroundImageUrl} onChange={e => setLocalBackgroundImageUrl(e.target.value)} className="w-full bg-navy p-2 rounded border border-lightest-navy" disabled={isSystemLocked || status !== TournamentStatus.OFFLINE || !hasPermission('canModifySettings')} placeholder="https://example.com/background.jpg" /></div>
+                        <div className="mb-4"><label className="block mb-2 font-semibold">Butiran Acara</label><input type="text" value={localEventDetails} onChange={e => setLocalEventDetails(e.target.value)} className="w-full bg-navy p-2 rounded border border-lightest-navy" disabled={isSystemLocked || status !== TournamentStatus.OFFLINE || !hasPermission('canModifySettings')} placeholder="Contoh: GELOMBANG SAMUDERA MADANI" /></div>
+                        <div className="mb-4"><label className="block mb-2 font-semibold">Mesej Selamat Datang</label><textarea value={localWelcomeMessage} onChange={e => setLocalWelcomeMessage(e.target.value)} rows={3} className="w-full bg-navy p-2 rounded border border-lightest-navy" disabled={isSystemLocked || status !== TournamentStatus.OFFLINE || !hasPermission('canModifySettings')}></textarea></div>
+                        <div><label className="block mb-2 font-semibold">Teks Footer</label><textarea value={localFooterText} onChange={e => setLocalFooterText(e.target.value)} rows={3} className="w-full bg-navy p-2 rounded border border-lightest-navy" disabled={isSystemLocked || status !== TournamentStatus.OFFLINE || !hasPermission('canModifySettings')}></textarea></div>
+                        {hasUnsavedChanges && hasPermission('canModifySettings') && (<button onClick={handleSaveChanges} className="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors disabled:opacity-50" disabled={isSystemLocked || status !== TournamentStatus.OFFLINE}>Simpan Perubahan</button>)}
                     </div>
                 </div>
                 {status === TournamentStatus.ONLINE && (

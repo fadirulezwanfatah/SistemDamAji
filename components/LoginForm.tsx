@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useAuthStore } from '../hooks/useAuthStore';
+import { useAuthStore, UserRole } from '../hooks/useAuthStore';
 
 const LoginForm: React.FC = () => {
     const [username, setUsername] = useState('');
@@ -13,20 +13,20 @@ const LoginForm: React.FC = () => {
         setError('');
         setIsLoading(true);
 
-        // Simple authentication - you can enhance this later
+        // Role-based authentication
         const validCredentials = [
-            { username: 'admin', password: 'lkim2025' },
-            { username: 'urusetia', password: 'damaji2025' },
-            { username: 'fadirule', password: 'admin123' }
+            { username: 'admin', password: 'lkim2025', role: UserRole.MAIN_ADMIN },
+            { username: 'urusetia', password: 'damaji2025', role: UserRole.URUSETIA },
+            { username: 'fadirule', password: 'admin123', role: UserRole.PERSONAL }
         ];
 
-        const isValid = validCredentials.some(
+        const userCredential = validCredentials.find(
             cred => cred.username === username && cred.password === password
         );
 
         setTimeout(() => {
-            if (isValid) {
-                login(username);
+            if (userCredential) {
+                login(username, userCredential.role);
             } else {
                 setError('Username atau password tidak betul');
             }
