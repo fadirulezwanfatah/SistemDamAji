@@ -21,22 +21,56 @@ const YouTubeBackgroundMusic: React.FC<YouTubeBackgroundMusicProps> = ({ tournam
   const [apiReady, setApiReady] = useState(false);
   const playerRef = useRef<HTMLDivElement>(null);
 
-  // Load YouTube IFrame API
+  // Load YouTube IFrame API with error handling
   useEffect(() => {
     if (window.YT && window.YT.Player) {
+      console.log('🎵 YouTube API already loaded');
       setApiReady(true);
       return;
     }
+
+    // Check if script already exists
+    const existingScript = document.querySelector('script[src*="youtube.com/iframe_api"]');
+    if (existingScript) {
+      console.log('🎵 YouTube API script already exists, waiting...');
+      // Wait for API to be ready
+      const checkAPI = setInterval(() => {
+        if (window.YT && window.YT.Player) {
+          console.log('🎵 YouTube API ready (existing script)');
+          setApiReady(true);
+          clearInterval(checkAPI);
+        }
+      }, 100);
+
+      // Timeout after 10 seconds
+      setTimeout(() => {
+        clearInterval(checkAPI);
+        console.error('🎵 YouTube API timeout');
+      }, 10000);
+
+      return;
+    }
+
+    console.log('🎵 Loading YouTube API script...');
 
     // Load YouTube API script
     const script = document.createElement('script');
     script.src = 'https://www.youtube.com/iframe_api';
     script.async = true;
+
+    script.onload = () => {
+      console.log('🎵 YouTube API script loaded');
+    };
+
+    script.onerror = () => {
+      console.error('🎵 Failed to load YouTube API script');
+    };
+
     document.body.appendChild(script);
 
     // Set up API ready callback
     window.onYouTubeIframeAPIReady = () => {
-      console.log('🎵 YouTube API ready');
+      console.log('🎵 YouTube API ready callback triggered');
       setApiReady(true);
     };
 
@@ -49,67 +83,103 @@ const YouTubeBackgroundMusic: React.FC<YouTubeBackgroundMusicProps> = ({ tournam
 
   // Initialize YouTube player when API is ready
   useEffect(() => {
-    if (!apiReady || !playerRef.current || !youtubeVideoId || !isMusicEnabled) return;
+    if (!apiReady || !playerRef.current || !youtubeVideoId || !isMusicEnabled) {
+      console.log('🎵 Player init conditions not met:', {
+        apiReady,
+        hasPlayerRef: !!playerRef.current,
+        youtubeVideoId,
+        isMusicEnabled
+      });
+      return;
+    }
 
     console.log('🎵 Initializing YouTube player with video ID:', youtubeVideoId);
 
-    const newPlayer = new window.YT.Player(playerRef.current, {
-      height: '1',
-      width: '1',
-      videoId: youtubeVideoId,
-      playerVars: {
-        autoplay: 1,
-        loop: 1,
-        playlist: youtubeVideoId, // Required for loop to work
-        controls: 0,
-        showinfo: 0,
-        rel: 0,
-        fs: 0,
-        cc_load_policy: 0,
-        iv_load_policy: 3,
-        modestbranding: 1,
-        mute: 0,
-        start: 0,
-        playsinline: 1,
-      },
-      events: {
-        onReady: (event: any) => {
-          console.log('🎵 YouTube player ready');
-          event.target.setVolume(musicVolume * 100);
-          
-          // Auto-play if tournament is not online
-          if (tournamentStatus !== TournamentStatus.ONLINE) {
-            event.target.playVideo();
-            setIsPlaying(true);
-            console.log('🎵 YouTube music started');
-          }
+    try {
+      const newPlayer = new window.YT.Player(playerRef.current, {
+        height: '1',
+        width: '1',
+        videoId: youtubeVideoId,
+        playerVars: {
+          autoplay: 1,
+          loop: 1,
+          playlist: youtubeVideoId, // Required for loop to work
+          controls: 0,
+          showinfo: 0,
+          rel: 0,
+          fs: 0,
+          cc_load_policy: 0,
+          iv_load_policy: 3,
+          modestbranding: 1,
+          mute: 0,
+          start: 0,
+          playsinline: 1,
         },
-        onStateChange: (event: any) => {
-          const state = event.data;
-          console.log('🎵 YouTube player state changed:', state);
-          
-          if (state === window.YT.PlayerState.PLAYING) {
-            setIsPlaying(true);
-            console.log('🎵 YouTube music playing');
-          } else if (state === window.YT.PlayerState.PAUSED) {
-            setIsPlaying(false);
-            console.log('🎵 YouTube music paused');
-          } else if (state === window.YT.PlayerState.ENDED) {
-            // Loop the video
-            event.target.playVideo();
-          }
-        },
-        onError: (event: any) => {
-          console.error('🎵 YouTube player error:', event.data);
-        }
-      }
-    });
+        events: {
+          onReady: (event: any) => {
+            console.log('🎵 YouTube player ready');
+            try {
+              event.target.setVolume(musicVolume * 100);
 
-    setPlayer(newPlayer);
+              // Auto-play if tournament is not online
+              if (tournamentStatus !== TournamentStatus.ONLINE) {
+                event.target.playVideo();
+                setIsPlaying(true);
+                console.log('🎵 YouTube music started');
+              }
+            } catch (error) {
+              console.error('🎵 Error in onReady:', error);
+            }
+          },
+          onStateChange: (event: any) => {
+            try {
+              const state = event.data;
+              console.log('🎵 YouTube player state changed:', state);
+
+              if (state === window.YT.PlayerState.PLAYING) {
+                setIsPlaying(true);
+                console.log('🎵 YouTube music playing');
+              } else if (state === window.YT.PlayerState.PAUSED) {
+                setIsPlaying(false);
+                console.log('🎵 YouTube music paused');
+              } else if (state === window.YT.PlayerState.ENDED) {
+                // Loop the video
+                event.target.playVideo();
+              }
+            } catch (error) {
+              console.error('🎵 Error in onStateChange:', error);
+            }
+          },
+          onError: (event: any) => {
+            console.error('🎵 YouTube player error:', event.data);
+            // Error codes: 2=invalid video ID, 5=HTML5 player error, 100=video not found, 101/150=private/restricted
+            const errorMessages = {
+              2: 'Invalid video ID',
+              5: 'HTML5 player error',
+              100: 'Video not found',
+              101: 'Video is private',
+              150: 'Video is restricted'
+            };
+            console.error('🎵 Error meaning:', errorMessages[event.data as keyof typeof errorMessages] || 'Unknown error');
+          }
+        }
+      });
+
+      setPlayer(newPlayer);
+      console.log('🎵 YouTube player created successfully');
+
+    } catch (error) {
+      console.error('🎵 Failed to create YouTube player:', error);
+    }
 
     return () => {
-      if (newPlayer && newPlayer.destroy) {
-        newPlayer.destroy();
+      try {
+        if (player && player.destroy) {
+          player.destroy();
+          console.log('🎵 YouTube player destroyed');
+        }
+      } catch (error) {
+        console.error('🎵 Error destroying player:', error);
       }
     };
   }, [apiReady, youtubeVideoId, isMusicEnabled]);

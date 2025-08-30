@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useTournamentStore } from '../hooks/useTournamentStore';
 import { TournamentStatus, Match, Player, TournamentFormat } from '../types';
 import Header from '../components/Header';
-import YouTubeBackgroundMusic from '../components/YouTubeBackgroundMusic';
+import HybridBackgroundMusic from '../components/HybridBackgroundMusic';
 import { TrophyIcon, UsersIcon, ListIcon } from '../components/icons';
 import { ORGANIZER, DAM_AJI_BOARD_BG } from '../constants';
 
@@ -480,8 +480,8 @@ const PublicView: React.FC = () => {
         <div className="h-full flex flex-col bg-navy/80">
             <Header />
 
-            {/* Hidden YouTube Background Music - Completely invisible, autoplay */}
-            <YouTubeBackgroundMusic tournamentStatus={status} />
+            {/* Hybrid Background Music - YouTube primary, Audio fallback */}
+            <HybridBackgroundMusic tournamentStatus={status} />
 
             <main className="flex-grow flex flex-col min-h-0 overflow-hidden">{renderContent()}</main>
             <footer className="w-full text-base text-slate bg-navy p-3 shrink-0 border-t-2 border-gold">

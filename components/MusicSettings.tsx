@@ -359,6 +359,19 @@ const MusicSettings: React.FC<MusicSettingsProps> = ({ className = '' }) => {
             </button>
           </div>
 
+          {/* Recovery Button */}
+          <button
+            onClick={() => {
+              // Force reload frontend music system
+              window.dispatchEvent(new CustomEvent('reloadMusicSystem'));
+              alert('🔄 Music system reload triggered! Check frontend for recovery.');
+            }}
+            className="w-full mt-2 bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded transition-colors"
+          >
+            🔄 Reload Music System
+          </button>
+          </div>
+
           <p className="text-xs text-yellow-200 mt-2">
             💡 Check browser console (F12) untuk detailed music logs
           </p>
