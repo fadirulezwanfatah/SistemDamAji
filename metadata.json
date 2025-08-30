@@ -1,0 +1,5 @@
+{
+  "name": "Sistem Pengurusan Pertandingan Dam Aji",
+  "description": "A real-time management system for the Dam Aji tournament, displaying live scores, leaderboards, and round status. Organized by Lembaga Kemajuan Ikan Malaysia for Malaysia's Independence Day.",
+  "requestFramePermissions": []
+}
