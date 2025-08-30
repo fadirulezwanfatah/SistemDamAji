@@ -56,10 +56,10 @@ const MusicSettings: React.FC<MusicSettingsProps> = ({ className = '' }) => {
   };
 
   const presetSongs = [
-    { name: 'Default Background', url: '/audio/background.mp3' },
-    { name: 'Instrumental 1', url: '/audio/instrumental1.mp3' },
-    { name: 'Ambient Music', url: '/audio/ambient.mp3' },
-    { name: 'Classical', url: '/audio/classical.mp3' },
+    { name: 'Test Bell Sound', url: 'https://www.soundjay.com/misc/sounds/bell-ringing-05.wav' },
+    { name: 'Peaceful Piano', url: 'https://www.soundjay.com/misc/sounds/clock-chimes-daniel_simon.wav' },
+    { name: 'Nature Sounds', url: 'https://www.soundjay.com/nature/sounds/rain-03.wav' },
+    { name: 'Soft Chime', url: 'https://www.soundjay.com/misc/sounds/wind-chime-daniel_simon.wav' },
   ];
 
   const hasUnsavedChanges = localMusicUrl !== backgroundMusicUrl;
@@ -198,10 +198,44 @@ const MusicSettings: React.FC<MusicSettingsProps> = ({ className = '' }) => {
           </div>
         </div>
 
+        {/* Debug Panel */}
+        <div className="mt-4 p-3 bg-yellow-900/30 rounded border border-yellow-500/30">
+          <h3 className="text-sm font-semibold text-yellow-200 mb-2">🔧 Debug & Test</h3>
+          <div className="text-xs text-yellow-100 space-y-1 mb-3">
+            <div>Music URL: <span className="font-mono">{backgroundMusicUrl}</span></div>
+            <div>Enabled: <span className={isMusicEnabled ? 'text-green-300' : 'text-red-300'}>{isMusicEnabled ? 'YES' : 'NO'}</span></div>
+            <div>Volume: <span className="text-blue-300">{Math.round(musicVolume * 100)}%</span></div>
+          </div>
+
+          {/* Force Test Button */}
+          <button
+            onClick={() => {
+              const audio = new Audio(backgroundMusicUrl);
+              audio.volume = musicVolume;
+              audio.play()
+                .then(() => {
+                  console.log('✅ Direct audio test successful');
+                  alert('✅ Audio test successful! Music should work.');
+                })
+                .catch((error) => {
+                  console.error('❌ Direct audio test failed:', error);
+                  alert('❌ Audio test failed: ' + error.message);
+                });
+            }}
+            className="w-full bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded transition-colors"
+          >
+            🔊 Force Test Audio
+          </button>
+
+          <p className="text-xs text-yellow-200 mt-2">
+            💡 Check browser console (F12) untuk detailed music logs
+          </p>
+        </div>
+
         {/* Info */}
         <div className="mt-4 p-3 bg-blue-900/30 rounded border border-blue-500/30">
           <p className="text-sm text-blue-200">
-            ℹ️ <strong>Nota:</strong> Muzik akan auto-play bila pengguna masuk frontend dan auto-pause bila tournament aktif. 
+            ℹ️ <strong>Nota:</strong> Muzik akan auto-play bila pengguna masuk frontend dan auto-pause bila tournament aktif.
             Pengguna boleh control sendiri tetapi tetapan admin akan override.
           </p>
         </div>

@@ -124,8 +124,8 @@ const getInitialState = (): TournamentState => ({
   madaniLogoUrl: "https://ecentral.my/wp-content/uploads/2023/05/LOGO-MALAYSIA-MADANI-DENGAN-PERKATAAN-1024x428.png",
   backgroundImageUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQvtQ4-QytSLFUJSXDdtpTHkYx5d4-f630rLQ&s",
   isSystemLocked: false,
-  // Music settings
-  backgroundMusicUrl: "/audio/background.mp3",
+  // Music settings - Use online sample for testing
+  backgroundMusicUrl: "https://www.soundjay.com/misc/sounds/bell-ringing-05.wav",
   isMusicEnabled: true,
   musicVolume: 0.4,
 });
