@@ -106,78 +106,53 @@ const AudioManager: React.FC<AudioManagerProps> = ({ className = '', tournamentS
 
   return (
     <div className={`audio-manager ${className}`}>
-      {/* Background Music */}
+      {/* Admin Music Preview - Hidden audio for testing */}
       <audio
         ref={backgroundMusicRef}
         loop
         onPlay={() => setMusicPlaying(true)}
         onPause={() => setMusicPlaying(false)}
+        style={{ display: 'none' }}
       >
         <source src={backgroundMusicUrl} type="audio/mpeg" />
       </audio>
 
-      {/* Audio Controls */}
+      {/* Simplified Admin Controls */}
       <div className="flex items-center gap-3 p-3 bg-navy rounded border border-lightest-navy">
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => {
-              setMusicEnabled(!isMusicEnabled);
-              if (isMusicEnabled && musicPlaying) {
-                backgroundMusicRef.current?.pause();
-                setMusicPlaying(false);
-              }
-            }}
-            className={`px-3 py-1 rounded text-sm font-semibold transition-colors ${
-              isMusicEnabled
-                ? 'bg-green-600 text-white'
-                : 'bg-gray-600 text-gray-300'
-            }`}
-          >
-            {isMusicEnabled ? '🔊 Music ON' : '🔇 Music OFF'}
-          </button>
+          <span className="text-sm text-light-slate">🎵 Frontend Music:</span>
+          <span className={`px-3 py-1 rounded text-sm font-semibold ${
+            isMusicEnabled
+              ? 'bg-green-600 text-white'
+              : 'bg-red-600 text-white'
+          }`}>
+            {isMusicEnabled ? 'AKTIF' : 'TIDAK AKTIF'}
+          </span>
         </div>
 
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-light-slate">Volume:</span>
+          <span className="text-xs text-lightest-slate font-bold">
+            {Math.round(musicVolume * 100)}%
+          </span>
+        </div>
+
+        <div className="text-xs text-light-slate">
+          {getMusicStatusMessage()}
+        </div>
+
+        {/* Quick Test Button for Admin */}
         {isMusicEnabled && (
-          <>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={toggleBackgroundMusic}
-                disabled={tournamentStatus === TournamentStatus.ONLINE}
-                className={`px-3 py-1 rounded text-sm font-semibold transition-colors ${
-                  tournamentStatus === TournamentStatus.ONLINE
-                    ? 'bg-gray-500 text-gray-300 cursor-not-allowed'
-                    : musicPlaying
-                      ? 'bg-gold text-navy'
-                      : 'bg-slate text-white'
-                }`}
-              >
-                {tournamentStatus === TournamentStatus.ONLINE
-                  ? '⏸️ Auto-paused'
-                  : musicPlaying
-                    ? '⏸️ Pause Music'
-                    : '🎵 Play Music'
-                }
-              </button>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-light-slate">Volume:</span>
-              <input
-                type="range"
-                min="0"
-                max="1"
-                step="0.1"
-                value={musicVolume}
-                onChange={(e) => setMusicVolume(parseFloat(e.target.value))}
-                className="w-16"
-              />
-              <span className="text-xs text-light-slate">{Math.round(musicVolume * 100)}%</span>
-            </div>
-
-            <div className="text-xs text-light-slate">
-              {getMusicStatusMessage()}
-            </div>
-          </>
+          <button
+            onClick={toggleBackgroundMusic}
+            className={`px-3 py-1 rounded text-xs font-semibold transition-colors ${
+              musicPlaying
+                ? 'bg-gold text-navy'
+                : 'bg-slate text-white'
+            }`}
+          >
+            {musicPlaying ? '⏸️ Stop Test' : '▶️ Test Play'}
+          </button>
         )}
       </div>
     </div>

@@ -6,6 +6,7 @@ import { useAuthStore } from '../hooks/useAuthStore';
 import { TournamentStatus, TournamentFormat, TournamentMode, Player, Match } from '../types';
 import Header from '../components/Header';
 import MusicSettings from '../components/MusicSettings';
+import AudioManager from '../components/AudioManager';
 import Loading from '../components/Loading';
 import SearchInput from '../components/SearchInput';
 import Statistics from '../components/Statistics';
@@ -571,7 +572,11 @@ const AdminView: React.FC = () => {
 
                 {/* Music Settings Panel - Main Admin only */}
                 {role === 'main_admin' && (
-                    <div className="mb-8">
+                    <div className="mb-8 space-y-6">
+                        {/* Music Status Monitor */}
+                        <AudioManager tournamentStatus={status} />
+
+                        {/* Full Music Settings */}
                         <MusicSettings />
                     </div>
                 )}
