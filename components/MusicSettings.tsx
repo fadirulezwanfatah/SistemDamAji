@@ -93,10 +93,10 @@ const MusicSettings: React.FC<MusicSettingsProps> = ({ className = '' }) => {
   ];
 
   const presetSongs = [
-    { name: 'Test Bell Sound', url: 'https://www.soundjay.com/misc/sounds/bell-ringing-05.wav' },
-    { name: 'Peaceful Piano', url: 'https://www.soundjay.com/misc/sounds/clock-chimes-daniel_simon.wav' },
-    { name: 'Nature Sounds', url: 'https://www.soundjay.com/nature/sounds/rain-03.wav' },
-    { name: 'Soft Chime', url: 'https://www.soundjay.com/misc/sounds/wind-chime-daniel_simon.wav' },
+    { name: 'Kalimba (Default)', url: 'https://www.learningcontainer.com/wp-content/uploads/2020/02/Kalimba.mp3' },
+    { name: 'Sample Audio 1', url: 'https://file-examples.com/storage/fe68c8777b8e7d85b881c5c/2017/11/file_example_MP3_700KB.mp3' },
+    { name: 'Sample Audio 2', url: 'https://file-examples.com/storage/fe68c8777b8e7d85b881c5c/2017/11/file_example_MP3_1MG.mp3' },
+    { name: 'Sample Audio 3', url: 'https://www.soundjay.com/misc/sounds/bell-ringing-05.wav' },
   ];
 
   const hasUnsavedChanges = localMusicUrl !== backgroundMusicUrl;
@@ -148,32 +148,9 @@ const MusicSettings: React.FC<MusicSettingsProps> = ({ className = '' }) => {
           </div>
         </div>
 
-        {/* YouTube URL Input - Primary Method */}
+        {/* Music URL Input - Simple and Reliable */}
         <div className="mb-6 p-4 bg-navy rounded border border-lightest-navy border-2 border-gold/50">
-          <h3 className="text-lg font-semibold text-gold mb-3">🎵 YouTube Background Music (RECOMMENDED)</h3>
-          <div className="space-y-3">
-            <input
-              type="url"
-              value={localYoutubeUrl}
-              onChange={(e) => setLocalYoutubeUrl(e.target.value)}
-              placeholder="https://www.youtube.com/watch?v=OYaFysVh_qU"
-              className="w-full bg-lightest-navy p-3 rounded border border-light-slate text-lightest-slate"
-            />
-            <button
-              onClick={handleSaveYouTubeUrl}
-              className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition-colors"
-            >
-              🎵 Simpan YouTube Video
-            </button>
-            <p className="text-xs text-light-slate">
-              ✅ <strong>Kelebihan YouTube:</strong> Autoplay berfungsi, tiada masalah browser, muzik berkualiti tinggi
-            </p>
-          </div>
-        </div>
-
-        {/* Music URL Input - Alternative Method */}
-        <div className="mb-6 p-4 bg-navy rounded border border-lightest-navy">
-          <h3 className="text-lg font-semibold text-gold mb-3">🔊 Direct Audio URL (Alternative)</h3>
+          <h3 className="text-lg font-semibold text-gold mb-3">🎵 Audio Background Music</h3>
           <div className="space-y-3">
             <input
               type="url"
@@ -191,7 +168,7 @@ const MusicSettings: React.FC<MusicSettingsProps> = ({ className = '' }) => {
               </button>
             )}
             <p className="text-xs text-light-slate">
-              ⚠️ <strong>Nota:</strong> Direct audio mungkin tidak autoplay dalam sesetengah browser
+              ✅ <strong>Nota:</strong> Audio akan play selepas user interaction (click/touch page)
             </p>
           </div>
         </div>
@@ -239,33 +216,9 @@ const MusicSettings: React.FC<MusicSettingsProps> = ({ className = '' }) => {
           </div>
         </div>
 
-        {/* YouTube Preset Videos */}
-        <div className="mb-6 p-4 bg-navy rounded border border-lightest-navy">
-          <h3 className="text-lg font-semibold text-gold mb-3">🎵 YouTube Preset Videos</h3>
-          <div className="grid grid-cols-2 gap-2">
-            {presetYouTubeVideos.map((video, index) => (
-              <button
-                key={index}
-                onClick={() => {
-                  setYoutubeVideoId(video.videoId);
-                  setLocalYoutubeUrl(`https://www.youtube.com/watch?v=${video.videoId}`);
-                  alert(`YouTube video "${video.name}" telah diaktifkan!`);
-                }}
-                className={`p-2 rounded text-sm font-semibold transition-colors ${
-                  youtubeVideoId === video.videoId
-                    ? 'bg-red-600 text-white'
-                    : 'bg-lightest-navy hover:bg-light-slate text-lightest-slate'
-                }`}
-              >
-                {video.name}
-              </button>
-            ))}
-          </div>
-        </div>
-
         {/* Audio Preset Songs */}
         <div className="mb-6 p-4 bg-navy rounded border border-lightest-navy">
-          <h3 className="text-lg font-semibold text-gold mb-3">🔊 Audio Preset Files</h3>
+          <h3 className="text-lg font-semibold text-gold mb-3">🎵 Preset Audio Files</h3>
           <div className="grid grid-cols-2 gap-2">
             {presetSongs.map((song, index) => (
               <button
@@ -299,12 +252,6 @@ const MusicSettings: React.FC<MusicSettingsProps> = ({ className = '' }) => {
             <div className="flex justify-between">
               <span className="text-light-slate">Volume:</span>
               <span className="text-lightest-slate font-bold">{Math.round(musicVolume * 100)}%</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-light-slate">YouTube Video:</span>
-              <span className="text-red-400 font-mono text-xs">
-                {youtubeVideoId}
-              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-light-slate">Audio URL:</span>

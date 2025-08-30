@@ -126,11 +126,11 @@ const getInitialState = (): TournamentState => ({
   madaniLogoUrl: "https://ecentral.my/wp-content/uploads/2023/05/LOGO-MALAYSIA-MADANI-DENGAN-PERKATAAN-1024x428.png",
   backgroundImageUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQvtQ4-QytSLFUJSXDdtpTHkYx5d4-f630rLQ&s",
   isSystemLocked: false,
-  // Music settings - YouTube default
-  backgroundMusicUrl: "https://www.soundjay.com/misc/sounds/bell-ringing-05.wav",
+  // Music settings - Simple reliable audio
+  backgroundMusicUrl: "https://www.learningcontainer.com/wp-content/uploads/2020/02/Kalimba.mp3",
   youtubeVideoId: "OYaFysVh_qU", // Default YouTube video ID
   isMusicEnabled: true,
-  musicVolume: 0.4,
+  musicVolume: 0.3,
 });
 
 export const useTournamentStore = create<TournamentState & TournamentActions>()(
