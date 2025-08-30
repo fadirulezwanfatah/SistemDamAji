@@ -5,6 +5,7 @@ import { useTournamentStore } from '../hooks/useTournamentStore';
 import { useAuthStore } from '../hooks/useAuthStore';
 import { TournamentStatus, TournamentFormat, TournamentMode, Player, Match } from '../types';
 import Header from '../components/Header';
+import MusicSettings from '../components/MusicSettings';
 import Loading from '../components/Loading';
 import SearchInput from '../components/SearchInput';
 import Statistics from '../components/Statistics';
@@ -567,6 +568,14 @@ const AdminView: React.FC = () => {
                         </div>
                     )}
                 </div>
+
+                {/* Music Settings Panel - Main Admin only */}
+                {role === 'main_admin' && (
+                    <div className="mb-8">
+                        <MusicSettings />
+                    </div>
+                )}
+
                 {status === TournamentStatus.ONLINE && (
                 <section className="p-6 bg-light-navy rounded-lg shadow-lg">
                     <div className="flex justify-between items-center mb-4">

@@ -25,6 +25,10 @@ interface TournamentState {
   madaniLogoUrl: string;
   backgroundImageUrl: string;
   isSystemLocked: boolean;
+  // Music settings
+  backgroundMusicUrl: string;
+  isMusicEnabled: boolean;
+  musicVolume: number;
 }
 
 interface TournamentActions {
@@ -46,6 +50,10 @@ interface TournamentActions {
   setMatchDraw: (matchId: string) => { success: boolean; error?: string };
   resetTournament: () => void;
   exportTournamentData: () => void;
+  // Music settings actions
+  setBackgroundMusicUrl: (url: string) => void;
+  setMusicEnabled: (enabled: boolean) => void;
+  setMusicVolume: (volume: number) => void;
   // Manual pairing actions
   addManualPairing: (round: number, table: number, playerAId: string, playerBId: string) => { success: boolean; error?: string };
   updateManualPairing: (pairingId: string, playerAId: string, playerBId: string) => { success: boolean; error?: string };
@@ -116,6 +124,10 @@ const getInitialState = (): TournamentState => ({
   madaniLogoUrl: "https://ecentral.my/wp-content/uploads/2023/05/LOGO-MALAYSIA-MADANI-DENGAN-PERKATAAN-1024x428.png",
   backgroundImageUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQvtQ4-QytSLFUJSXDdtpTHkYx5d4-f630rLQ&s",
   isSystemLocked: false,
+  // Music settings
+  backgroundMusicUrl: "/audio/background.mp3",
+  isMusicEnabled: true,
+  musicVolume: 0.4,
 });
 
 export const useTournamentStore = create<TournamentState & TournamentActions>()(
@@ -894,6 +906,9 @@ export const useTournamentStore = create<TournamentState & TournamentActions>()(
             state.madaniLogoUrl = initialState.madaniLogoUrl;
             state.backgroundImageUrl = initialState.backgroundImageUrl;
             state.isSystemLocked = initialState.isSystemLocked;
+            state.backgroundMusicUrl = initialState.backgroundMusicUrl;
+            state.isMusicEnabled = initialState.isMusicEnabled;
+            state.musicVolume = initialState.musicVolume;
         }));
       },
 
@@ -933,6 +948,25 @@ export const useTournamentStore = create<TournamentState & TournamentActions>()(
         } catch (error) {
           console.error('Error exporting tournament data:', error);
         }
+      },
+
+      // Music settings actions
+      setBackgroundMusicUrl: (url: string) => {
+        set(produce((state: TournamentState) => {
+          state.backgroundMusicUrl = url;
+        }));
+      },
+
+      setMusicEnabled: (enabled: boolean) => {
+        set(produce((state: TournamentState) => {
+          state.isMusicEnabled = enabled;
+        }));
+      },
+
+      setMusicVolume: (volume: number) => {
+        set(produce((state: TournamentState) => {
+          state.musicVolume = Math.max(0, Math.min(1, volume)); // Clamp between 0-1
+        }));
       },
     }),
     {

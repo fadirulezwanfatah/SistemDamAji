@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { TournamentStatus } from '../types';
+import { useTournamentStore } from '../hooks/useTournamentStore';
 
 interface AudioManagerProps {
   className?: string;
@@ -7,41 +8,41 @@ interface AudioManagerProps {
 }
 
 const AudioManager: React.FC<AudioManagerProps> = ({ className = '', tournamentStatus }) => {
-  const [audioEnabled, setAudioEnabled] = useState(true); // Default enabled
+  const {
+    backgroundMusicUrl,
+    isMusicEnabled,
+    musicVolume,
+    setMusicEnabled,
+    setMusicVolume
+  } = useTournamentStore();
+
   const [musicPlaying, setMusicPlaying] = useState(false);
   const [userPaused, setUserPaused] = useState(false); // Track manual pause
-  const [volume, setVolume] = useState(0.4);
   const backgroundMusicRef = useRef<HTMLAudioElement>(null);
 
-  // Load user preferences
-  useEffect(() => {
-    const savedPrefs = localStorage.getItem('audio-preferences');
-    if (savedPrefs) {
-      const prefs = JSON.parse(savedPrefs);
-      setAudioEnabled(prefs.enabled !== false); // Default true
-      setVolume(prefs.volume || 0.4);
-    }
-  }, []);
-
-  // Save preferences
-  useEffect(() => {
-    localStorage.setItem('audio-preferences', JSON.stringify({
-      enabled: audioEnabled,
-      volume: volume
-    }));
-  }, [audioEnabled, volume]);
-
-  // Update volume
+  // Update volume when store changes
   useEffect(() => {
     if (backgroundMusicRef.current) {
-      backgroundMusicRef.current.volume = volume;
+      backgroundMusicRef.current.volume = musicVolume;
     }
-  }, [volume]);
+  }, [musicVolume]);
+
+  // Update audio source when URL changes
+  useEffect(() => {
+    const audio = backgroundMusicRef.current;
+    if (audio && backgroundMusicUrl) {
+      const wasPlaying = !audio.paused;
+      audio.src = backgroundMusicUrl;
+      if (wasPlaying && isMusicEnabled) {
+        audio.play().catch(() => {});
+      }
+    }
+  }, [backgroundMusicUrl]);
 
   // Smart autoplay based on tournament status
   useEffect(() => {
     const audio = backgroundMusicRef.current;
-    if (!audio || !audioEnabled) return;
+    if (!audio || !isMusicEnabled) return;
 
     const shouldPlay = tournamentStatus !== TournamentStatus.ONLINE && !userPaused;
 
@@ -63,24 +64,24 @@ const AudioManager: React.FC<AudioManagerProps> = ({ className = '', tournamentS
       audio.pause();
       setMusicPlaying(false);
     }
-  }, [tournamentStatus, audioEnabled, userPaused, musicPlaying]);
+  }, [tournamentStatus, isMusicEnabled, userPaused, musicPlaying]);
 
   const playSuccessSound = () => {
-    if (!audioEnabled) return;
+    if (!isMusicEnabled) return;
     const audio = new Audio('/audio/success.mp3');
-    audio.volume = volume;
+    audio.volume = musicVolume;
     audio.play().catch(() => {});
   };
 
   const playStartSound = () => {
-    if (!audioEnabled) return;
+    if (!isMusicEnabled) return;
     const audio = new Audio('/audio/tournament-start.mp3');
-    audio.volume = volume;
+    audio.volume = musicVolume;
     audio.play().catch(() => {});
   };
 
   const toggleBackgroundMusic = () => {
-    if (!audioEnabled) return;
+    if (!isMusicEnabled) return;
 
     if (backgroundMusicRef.current) {
       if (musicPlaying) {
@@ -96,7 +97,7 @@ const AudioManager: React.FC<AudioManagerProps> = ({ className = '', tournamentS
 
   // Get music status message
   const getMusicStatusMessage = () => {
-    if (!audioEnabled) return '🔇 Audio disabled';
+    if (!isMusicEnabled) return '🔇 Music disabled by admin';
     if (tournamentStatus === TournamentStatus.ONLINE) return '⏸️ Paused (Tournament active)';
     if (userPaused) return '⏸️ Paused by user';
     if (musicPlaying) return '🎵 Playing background music';
@@ -106,13 +107,13 @@ const AudioManager: React.FC<AudioManagerProps> = ({ className = '', tournamentS
   return (
     <div className={`audio-manager ${className}`}>
       {/* Background Music */}
-      <audio 
-        ref={backgroundMusicRef} 
-        loop 
+      <audio
+        ref={backgroundMusicRef}
+        loop
         onPlay={() => setMusicPlaying(true)}
         onPause={() => setMusicPlaying(false)}
       >
-        <source src="/audio/background.mp3" type="audio/mpeg" />
+        <source src={backgroundMusicUrl} type="audio/mpeg" />
       </audio>
 
       {/* Audio Controls */}
@@ -120,23 +121,23 @@ const AudioManager: React.FC<AudioManagerProps> = ({ className = '', tournamentS
         <div className="flex items-center gap-2">
           <button
             onClick={() => {
-              setAudioEnabled(!audioEnabled);
-              if (audioEnabled && musicPlaying) {
+              setMusicEnabled(!isMusicEnabled);
+              if (isMusicEnabled && musicPlaying) {
                 backgroundMusicRef.current?.pause();
                 setMusicPlaying(false);
               }
             }}
             className={`px-3 py-1 rounded text-sm font-semibold transition-colors ${
-              audioEnabled
+              isMusicEnabled
                 ? 'bg-green-600 text-white'
                 : 'bg-gray-600 text-gray-300'
             }`}
           >
-            {audioEnabled ? '🔊 Audio ON' : '🔇 Audio OFF'}
+            {isMusicEnabled ? '🔊 Music ON' : '🔇 Music OFF'}
           </button>
         </div>
 
-        {audioEnabled && (
+        {isMusicEnabled && (
           <>
             <div className="flex items-center gap-2">
               <button
@@ -166,11 +167,11 @@ const AudioManager: React.FC<AudioManagerProps> = ({ className = '', tournamentS
                 min="0"
                 max="1"
                 step="0.1"
-                value={volume}
-                onChange={(e) => setVolume(parseFloat(e.target.value))}
+                value={musicVolume}
+                onChange={(e) => setMusicVolume(parseFloat(e.target.value))}
                 className="w-16"
               />
-              <span className="text-xs text-light-slate">{Math.round(volume * 100)}%</span>
+              <span className="text-xs text-light-slate">{Math.round(musicVolume * 100)}%</span>
             </div>
 
             <div className="text-xs text-light-slate">
