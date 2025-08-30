@@ -27,6 +27,7 @@ interface TournamentState {
   isSystemLocked: boolean;
   // Music settings
   backgroundMusicUrl: string;
+  youtubeVideoId: string;
   isMusicEnabled: boolean;
   musicVolume: number;
 }
@@ -52,6 +53,7 @@ interface TournamentActions {
   exportTournamentData: () => void;
   // Music settings actions
   setBackgroundMusicUrl: (url: string) => void;
+  setYoutubeVideoId: (videoId: string) => void;
   setMusicEnabled: (enabled: boolean) => void;
   setMusicVolume: (volume: number) => void;
   // Manual pairing actions
@@ -124,8 +126,9 @@ const getInitialState = (): TournamentState => ({
   madaniLogoUrl: "https://ecentral.my/wp-content/uploads/2023/05/LOGO-MALAYSIA-MADANI-DENGAN-PERKATAAN-1024x428.png",
   backgroundImageUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQvtQ4-QytSLFUJSXDdtpTHkYx5d4-f630rLQ&s",
   isSystemLocked: false,
-  // Music settings - Use online sample for testing
+  // Music settings - YouTube default
   backgroundMusicUrl: "https://www.soundjay.com/misc/sounds/bell-ringing-05.wav",
+  youtubeVideoId: "OYaFysVh_qU", // Default YouTube video ID
   isMusicEnabled: true,
   musicVolume: 0.4,
 });
@@ -966,6 +969,12 @@ export const useTournamentStore = create<TournamentState & TournamentActions>()(
       setMusicVolume: (volume: number) => {
         set(produce((state: TournamentState) => {
           state.musicVolume = Math.max(0, Math.min(1, volume)); // Clamp between 0-1
+        }));
+      },
+
+      setYoutubeVideoId: (videoId: string) => {
+        set(produce((state: TournamentState) => {
+          state.youtubeVideoId = videoId;
         }));
       },
     }),

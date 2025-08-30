@@ -6,16 +6,19 @@ interface MusicSettingsProps {
 }
 
 const MusicSettings: React.FC<MusicSettingsProps> = ({ className = '' }) => {
-  const { 
-    backgroundMusicUrl, 
-    isMusicEnabled, 
+  const {
+    backgroundMusicUrl,
+    youtubeVideoId,
+    isMusicEnabled,
     musicVolume,
     setBackgroundMusicUrl,
+    setYoutubeVideoId,
     setMusicEnabled,
-    setMusicVolume 
+    setMusicVolume
   } = useTournamentStore();
 
   const [localMusicUrl, setLocalMusicUrl] = useState(backgroundMusicUrl);
+  const [localYoutubeUrl, setLocalYoutubeUrl] = useState(`https://www.youtube.com/watch?v=${youtubeVideoId}`);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [uploadedFileUrl, setUploadedFileUrl] = useState<string>('');
   const [isUploading, setIsUploading] = useState(false);
@@ -65,6 +68,29 @@ const MusicSettings: React.FC<MusicSettingsProps> = ({ className = '' }) => {
       setUploadedFile(null); // Clear the pending file
     }
   };
+
+  const extractYouTubeVideoId = (url: string): string => {
+    const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+    const match = url.match(regex);
+    return match ? match[1] : '';
+  };
+
+  const handleSaveYouTubeUrl = () => {
+    const videoId = extractYouTubeVideoId(localYoutubeUrl);
+    if (videoId) {
+      setYoutubeVideoId(videoId);
+      alert('YouTube video telah dikemaskini! Video ID: ' + videoId);
+    } else {
+      alert('URL YouTube tidak sah. Sila gunakan format: https://www.youtube.com/watch?v=VIDEO_ID');
+    }
+  };
+
+  const presetYouTubeVideos = [
+    { name: 'Default - Relaxing Music', videoId: 'OYaFysVh_qU' },
+    { name: 'Peaceful Piano', videoId: 'jfKfPfyJRdk' },
+    { name: 'Nature Sounds', videoId: 'eKFTSSKCzWA' },
+    { name: 'Instrumental Background', videoId: 'lTRiuFIWV54' },
+  ];
 
   const presetSongs = [
     { name: 'Test Bell Sound', url: 'https://www.soundjay.com/misc/sounds/bell-ringing-05.wav' },
@@ -122,9 +148,32 @@ const MusicSettings: React.FC<MusicSettingsProps> = ({ className = '' }) => {
           </div>
         </div>
 
-        {/* Music URL Input */}
+        {/* YouTube URL Input - Primary Method */}
+        <div className="mb-6 p-4 bg-navy rounded border border-lightest-navy border-2 border-gold/50">
+          <h3 className="text-lg font-semibold text-gold mb-3">🎵 YouTube Background Music (RECOMMENDED)</h3>
+          <div className="space-y-3">
+            <input
+              type="url"
+              value={localYoutubeUrl}
+              onChange={(e) => setLocalYoutubeUrl(e.target.value)}
+              placeholder="https://www.youtube.com/watch?v=OYaFysVh_qU"
+              className="w-full bg-lightest-navy p-3 rounded border border-light-slate text-lightest-slate"
+            />
+            <button
+              onClick={handleSaveYouTubeUrl}
+              className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition-colors"
+            >
+              🎵 Simpan YouTube Video
+            </button>
+            <p className="text-xs text-light-slate">
+              ✅ <strong>Kelebihan YouTube:</strong> Autoplay berfungsi, tiada masalah browser, muzik berkualiti tinggi
+            </p>
+          </div>
+        </div>
+
+        {/* Music URL Input - Alternative Method */}
         <div className="mb-6 p-4 bg-navy rounded border border-lightest-navy">
-          <h3 className="text-lg font-semibold text-gold mb-3">URL Lagu Background</h3>
+          <h3 className="text-lg font-semibold text-gold mb-3">🔊 Direct Audio URL (Alternative)</h3>
           <div className="space-y-3">
             <input
               type="url"
@@ -141,6 +190,9 @@ const MusicSettings: React.FC<MusicSettingsProps> = ({ className = '' }) => {
                 💾 Simpan URL Lagu
               </button>
             )}
+            <p className="text-xs text-light-slate">
+              ⚠️ <strong>Nota:</strong> Direct audio mungkin tidak autoplay dalam sesetengah browser
+            </p>
           </div>
         </div>
 
@@ -187,9 +239,33 @@ const MusicSettings: React.FC<MusicSettingsProps> = ({ className = '' }) => {
           </div>
         </div>
 
-        {/* Preset Songs */}
+        {/* YouTube Preset Videos */}
         <div className="mb-6 p-4 bg-navy rounded border border-lightest-navy">
-          <h3 className="text-lg font-semibold text-gold mb-3">Lagu Preset</h3>
+          <h3 className="text-lg font-semibold text-gold mb-3">🎵 YouTube Preset Videos</h3>
+          <div className="grid grid-cols-2 gap-2">
+            {presetYouTubeVideos.map((video, index) => (
+              <button
+                key={index}
+                onClick={() => {
+                  setYoutubeVideoId(video.videoId);
+                  setLocalYoutubeUrl(`https://www.youtube.com/watch?v=${video.videoId}`);
+                  alert(`YouTube video "${video.name}" telah diaktifkan!`);
+                }}
+                className={`p-2 rounded text-sm font-semibold transition-colors ${
+                  youtubeVideoId === video.videoId
+                    ? 'bg-red-600 text-white'
+                    : 'bg-lightest-navy hover:bg-light-slate text-lightest-slate'
+                }`}
+              >
+                {video.name}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Audio Preset Songs */}
+        <div className="mb-6 p-4 bg-navy rounded border border-lightest-navy">
+          <h3 className="text-lg font-semibold text-gold mb-3">🔊 Audio Preset Files</h3>
           <div className="grid grid-cols-2 gap-2">
             {presetSongs.map((song, index) => (
               <button
@@ -225,7 +301,13 @@ const MusicSettings: React.FC<MusicSettingsProps> = ({ className = '' }) => {
               <span className="text-lightest-slate font-bold">{Math.round(musicVolume * 100)}%</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-light-slate">URL Semasa:</span>
+              <span className="text-light-slate">YouTube Video:</span>
+              <span className="text-red-400 font-mono text-xs">
+                {youtubeVideoId}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-light-slate">Audio URL:</span>
               <span className="text-lightest-slate font-mono text-xs truncate max-w-xs">
                 {backgroundMusicUrl}
               </span>
