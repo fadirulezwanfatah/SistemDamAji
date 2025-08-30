@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useTournamentStore } from '../hooks/useTournamentStore';
+import { useAuthStore } from '../hooks/useAuthStore';
 import { TournamentStatus, TournamentFormat, TournamentMode, Player, Match } from '../types';
 import Header from '../components/Header';
 import Loading from '../components/Loading';
@@ -31,6 +32,7 @@ const AdminView: React.FC = () => {
         resetTournament, exportTournamentData,
     } = useTournamentStore();
 
+    const { username, logout } = useAuthStore();
     const { toasts, removeToast, showSuccess, showError } = useToast();
 
     const [newPlayerName, setNewPlayerName] = useState('');
@@ -309,17 +311,28 @@ const AdminView: React.FC = () => {
                             <span className="text-lg font-semibold">
                                 Status Sistem: {isSystemLocked ? '🔒 DIKUNCI' : '🔓 TERBUKA'}
                             </span>
+                            <span className="text-sm text-light-slate">
+                                | Logged in as: <span className="text-gold font-semibold">{username}</span>
+                            </span>
                         </div>
-                        <button
-                            onClick={toggleSystemLock}
-                            className={`px-4 py-2 rounded font-semibold transition-colors ${
-                                isSystemLocked
-                                    ? 'bg-green-600 hover:bg-green-700 text-white'
-                                    : 'bg-red-600 hover:bg-red-700 text-white'
-                            }`}
-                        >
-                            {isSystemLocked ? '🔓 Buka Kunci Sistem' : '🔒 Kunci Sistem'}
-                        </button>
+                        <div className="flex items-center gap-3">
+                            <button
+                                onClick={toggleSystemLock}
+                                className={`px-4 py-2 rounded font-semibold transition-colors ${
+                                    isSystemLocked
+                                        ? 'bg-green-600 hover:bg-green-700 text-white'
+                                        : 'bg-red-600 hover:bg-red-700 text-white'
+                                }`}
+                            >
+                                {isSystemLocked ? '🔓 Buka Kunci Sistem' : '🔒 Kunci Sistem'}
+                            </button>
+                            <button
+                                onClick={logout}
+                                className="px-4 py-2 rounded font-semibold bg-gray-600 hover:bg-gray-700 text-white transition-colors"
+                            >
+                                🚪 Logout
+                            </button>
+                        </div>
                     </div>
                     <p className="text-sm text-light-slate mt-2">
                         {isSystemLocked
