@@ -27,7 +27,6 @@ interface TournamentState {
   isSystemLocked: boolean;
   // Music settings
   backgroundMusicUrl: string;
-  youtubeVideoId: string;
   isMusicEnabled: boolean;
   musicVolume: number;
 }
@@ -53,7 +52,6 @@ interface TournamentActions {
   exportTournamentData: () => void;
   // Music settings actions
   setBackgroundMusicUrl: (url: string) => void;
-  setYoutubeVideoId: (videoId: string) => void;
   setMusicEnabled: (enabled: boolean) => void;
   setMusicVolume: (volume: number) => void;
   // Manual pairing actions
@@ -126,11 +124,10 @@ const getInitialState = (): TournamentState => ({
   madaniLogoUrl: "https://ecentral.my/wp-content/uploads/2023/05/LOGO-MALAYSIA-MADANI-DENGAN-PERKATAAN-1024x428.png",
   backgroundImageUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQvtQ4-QytSLFUJSXDdtpTHkYx5d4-f630rLQ&s",
   isSystemLocked: false,
-  // Music settings - Simple reliable audio
-  backgroundMusicUrl: "https://www.learningcontainer.com/wp-content/uploads/2020/02/Kalimba.mp3",
-  youtubeVideoId: "OYaFysVh_qU", // Default YouTube video ID
+  // Music settings
+  backgroundMusicUrl: "/audio/background.mp3",
   isMusicEnabled: true,
-  musicVolume: 0.3,
+  musicVolume: 0.4,
 });
 
 export const useTournamentStore = create<TournamentState & TournamentActions>()(
@@ -969,12 +966,6 @@ export const useTournamentStore = create<TournamentState & TournamentActions>()(
       setMusicVolume: (volume: number) => {
         set(produce((state: TournamentState) => {
           state.musicVolume = Math.max(0, Math.min(1, volume)); // Clamp between 0-1
-        }));
-      },
-
-      setYoutubeVideoId: (videoId: string) => {
-        set(produce((state: TournamentState) => {
-          state.youtubeVideoId = videoId;
         }));
       },
     }),

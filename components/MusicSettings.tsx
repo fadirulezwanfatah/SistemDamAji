@@ -8,17 +8,14 @@ interface MusicSettingsProps {
 const MusicSettings: React.FC<MusicSettingsProps> = ({ className = '' }) => {
   const {
     backgroundMusicUrl,
-    youtubeVideoId,
     isMusicEnabled,
     musicVolume,
     setBackgroundMusicUrl,
-    setYoutubeVideoId,
     setMusicEnabled,
     setMusicVolume
   } = useTournamentStore();
 
   const [localMusicUrl, setLocalMusicUrl] = useState(backgroundMusicUrl);
-  const [localYoutubeUrl, setLocalYoutubeUrl] = useState(`https://www.youtube.com/watch?v=${youtubeVideoId}`);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [uploadedFileUrl, setUploadedFileUrl] = useState<string>('');
   const [isUploading, setIsUploading] = useState(false);
@@ -69,34 +66,13 @@ const MusicSettings: React.FC<MusicSettingsProps> = ({ className = '' }) => {
     }
   };
 
-  const extractYouTubeVideoId = (url: string): string => {
-    const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
-    const match = url.match(regex);
-    return match ? match[1] : '';
-  };
 
-  const handleSaveYouTubeUrl = () => {
-    const videoId = extractYouTubeVideoId(localYoutubeUrl);
-    if (videoId) {
-      setYoutubeVideoId(videoId);
-      alert('YouTube video telah dikemaskini! Video ID: ' + videoId);
-    } else {
-      alert('URL YouTube tidak sah. Sila gunakan format: https://www.youtube.com/watch?v=VIDEO_ID');
-    }
-  };
-
-  const presetYouTubeVideos = [
-    { name: 'Default - Relaxing Music', videoId: 'OYaFysVh_qU' },
-    { name: 'Peaceful Piano', videoId: 'jfKfPfyJRdk' },
-    { name: 'Nature Sounds', videoId: 'eKFTSSKCzWA' },
-    { name: 'Instrumental Background', videoId: 'lTRiuFIWV54' },
-  ];
 
   const presetSongs = [
-    { name: 'Kalimba (Default)', url: 'https://www.learningcontainer.com/wp-content/uploads/2020/02/Kalimba.mp3' },
-    { name: 'Sample Audio 1', url: 'https://file-examples.com/storage/fe68c8777b8e7d85b881c5c/2017/11/file_example_MP3_700KB.mp3' },
-    { name: 'Sample Audio 2', url: 'https://file-examples.com/storage/fe68c8777b8e7d85b881c5c/2017/11/file_example_MP3_1MG.mp3' },
-    { name: 'Sample Audio 3', url: 'https://www.soundjay.com/misc/sounds/bell-ringing-05.wav' },
+    { name: 'Default Background', url: '/audio/background.mp3' },
+    { name: 'Instrumental 1', url: '/audio/instrumental1.mp3' },
+    { name: 'Ambient Music', url: '/audio/ambient.mp3' },
+    { name: 'Classical', url: '/audio/classical.mp3' },
   ];
 
   const hasUnsavedChanges = localMusicUrl !== backgroundMusicUrl;
@@ -148,9 +124,9 @@ const MusicSettings: React.FC<MusicSettingsProps> = ({ className = '' }) => {
           </div>
         </div>
 
-        {/* Music URL Input - Simple and Reliable */}
-        <div className="mb-6 p-4 bg-navy rounded border border-lightest-navy border-2 border-gold/50">
-          <h3 className="text-lg font-semibold text-gold mb-3">🎵 Audio Background Music</h3>
+        {/* Music URL Input */}
+        <div className="mb-6 p-4 bg-navy rounded border border-lightest-navy">
+          <h3 className="text-lg font-semibold text-gold mb-3">URL Lagu Background</h3>
           <div className="space-y-3">
             <input
               type="url"
@@ -168,7 +144,7 @@ const MusicSettings: React.FC<MusicSettingsProps> = ({ className = '' }) => {
               </button>
             )}
             <p className="text-xs text-light-slate">
-              ✅ <strong>Nota:</strong> Audio akan play selepas user interaction (click/touch page)
+              Format disokong: MP3, WAV, OGG. Pastikan URL boleh diakses secara awam.
             </p>
           </div>
         </div>
@@ -216,9 +192,9 @@ const MusicSettings: React.FC<MusicSettingsProps> = ({ className = '' }) => {
           </div>
         </div>
 
-        {/* Audio Preset Songs */}
+        {/* Preset Songs */}
         <div className="mb-6 p-4 bg-navy rounded border border-lightest-navy">
-          <h3 className="text-lg font-semibold text-gold mb-3">🎵 Preset Audio Files</h3>
+          <h3 className="text-lg font-semibold text-gold mb-3">Lagu Preset</h3>
           <div className="grid grid-cols-2 gap-2">
             {presetSongs.map((song, index) => (
               <button
@@ -262,67 +238,7 @@ const MusicSettings: React.FC<MusicSettingsProps> = ({ className = '' }) => {
           </div>
         </div>
 
-        {/* Debug Panel */}
-        <div className="mt-4 p-3 bg-yellow-900/30 rounded border border-yellow-500/30">
-          <h3 className="text-sm font-semibold text-yellow-200 mb-2">🔧 Debug & Test</h3>
-          <div className="text-xs text-yellow-100 space-y-1 mb-3">
-            <div>Music URL: <span className="font-mono">{backgroundMusicUrl}</span></div>
-            <div>Enabled: <span className={isMusicEnabled ? 'text-green-300' : 'text-red-300'}>{isMusicEnabled ? 'YES' : 'NO'}</span></div>
-            <div>Volume: <span className="text-blue-300">{Math.round(musicVolume * 100)}%</span></div>
-          </div>
 
-          {/* Test Buttons */}
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              onClick={() => {
-                const audio = new Audio(backgroundMusicUrl);
-                audio.volume = musicVolume;
-                audio.play()
-                  .then(() => {
-                    console.log('✅ Admin panel audio test successful');
-                    alert('✅ Admin audio test successful!');
-                  })
-                  .catch((error) => {
-                    console.error('❌ Admin panel audio test failed:', error);
-                    alert('❌ Admin audio test failed: ' + error.message);
-                  });
-              }}
-              className="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded transition-colors"
-            >
-              🔊 Test Admin Audio
-            </button>
-
-            <button
-              onClick={() => {
-                // Test frontend music by triggering a custom event
-                window.dispatchEvent(new CustomEvent('testFrontendMusic', {
-                  detail: { url: backgroundMusicUrl, volume: musicVolume }
-                }));
-                alert('🎵 Frontend music test triggered! Check frontend tab and console.');
-              }}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors"
-            >
-              🌐 Test Frontend Music
-            </button>
-          </div>
-
-          {/* Recovery Button */}
-          <button
-            onClick={() => {
-              // Force reload frontend music system
-              window.dispatchEvent(new CustomEvent('reloadMusicSystem'));
-              alert('🔄 Music system reload triggered! Check frontend for recovery.');
-            }}
-            className="w-full mt-2 bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded transition-colors"
-          >
-            🔄 Reload Music System
-          </button>
-          </div>
-
-          <p className="text-xs text-yellow-200 mt-2">
-            💡 Check browser console (F12) untuk detailed music logs
-          </p>
-        </div>
 
         {/* Info */}
         <div className="mt-4 p-3 bg-blue-900/30 rounded border border-blue-500/30">
